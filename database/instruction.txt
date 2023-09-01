@@ -1,0 +1,231 @@
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+
+
+
+----------------------INSERT-----------------------------
+
+insert: [pool_name] [scheme_name] [collection_name]
+    press enter
+key: [id] [game_zone]
+    ~press enter
+value: [nickname] [status] [valute] [premium_valute] [experience] [date_of_registration] [time_in_game]
+    ~press enter
+
+----------------------INFO-------------------------------
+
+Before inserting add pool, scheme and collection. 
+Types:
+    id -> int
+    status -> can onle be: simple/premium/moderator/admin
+
+-----------------------------------------------------------
+
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+
+
+----------------------READ_KEY-----------------------------
+
+read key: [pool_name] [scheme_name] [collection_name]
+    ~press enter
+key: [id] [game_zone]
+    ~press enter
+
+----------------------INFO-------------------------------
+
+Before reading key, there must be pool, scheme and collection with key/keys.
+
+-----------------------------------------------------------
+
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+
+
+----------------------READ_RANGE-----------------------------
+
+read range: [pool_name] [scheme_name] [collection_name]
+    ~press enter
+[first_player_id]
+    ~press enter
+[second_player_id]
+    ~press enter
+
+----------------------INFO-------------------------------
+
+Reading value from first key until second one.
+If you don't enter first key, range will begin with first key in scheme.
+If you enter second key, range will go until lastest key in scheme.
+
+-----------------------------------------------------------
+
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+
+
+----------------------UPDATE_KEY-----------------------------
+
+update key: [pool_name] [scheme_name] [collection_name]
+    ~press enter
+key: [id] [game_zone]
+    ~press enter
+value: [nickname] [status] [valute] [premium_valute] [experience] [date_of_registration] [time_in_game]
+    ~press enter
+
+----------------------INFO-------------------------------
+
+Make sure there is a key which you want to update.
+
+-----------------------------------------------------------
+
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+
+
+----------------------REMOVE-----------------------------
+
+insert: [pool_name] [scheme_name] [collection_name]
+    ~press enter
+key: [id] [game_zone]
+    ~press enter
+
+----------------------INFO-------------------------------
+
+Make sure there is a key which you want to remove.
+
+-----------------------------------------------------------
+
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+
+
+----------------------ADD_POOL-----------------------------
+
+add pool: [pool_name] { [allocator_name] [size(optional)] [allocator_mode(optional)] }
+    ~press enter
+
+----------------------INFO-------------------------------
+
+Accessible allocator names: 
+                -simple -> doesn't need size and allocator_mode
+                -border_descriptor -> need size and one of allocator_mode: first, best, worst, none(nullptr)
+
+-----------------------------------------------------------
+
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+
+
+----------------------DELETE_POOL-----------------------------
+
+delete pool: [pool_name]
+    ~press enter
+
+----------------------INFO-------------------------------
+
+Make sure there is a pool which you want to delete.
+
+-----------------------------------------------------------
+
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+
+
+----------------------ADD_SCHEME-----------------------------
+
+add scheme: [pool_name] [scheme_name]
+    ~press enter
+
+----------------------INFO-------------------------------
+
+Make sure there is a pool which you want to add scheme in.
+
+-----------------------------------------------------------
+
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+
+
+----------------------DELETE_SCHEME-----------------------------
+
+delete scheme: [pool_name] [scheme_name]
+    ~press enter
+
+----------------------INFO-------------------------------
+
+Make sure there are pool scheme and  which you want to delete.
+
+-----------------------------------------------------------
+
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+
+
+----------------------ADD_COLLECTION-----------------------------
+
+add collection: [pool_name] [scheme_name] [collection_name] {tree_type}
+    ~press enter
+
+----------------------INFO-------------------------------
+
+Make sure there are pool and scheme which you want to add collection in.
+
+Types of tree: red black tree.
+
+-----------------------------------------------------------
+
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+
+
+----------------------DELETE_COLLECTION-----------------------------
+
+delete collection: [pool_name] [scheme_name] [collection_name]
+    ~press enter
+
+----------------------INFO-------------------------------
+
+Make sure there are pool, scheme and collection which you want to delete.
+
+-----------------------------------------------------------
+
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+
+
+----------------------RESET_DATABASE-----------------------------
+
+reset database:
+    ~press enter
+
+----------------------INFO-------------------------------
+
+Deleting all pools, schemes and collections. 
+
+-----------------------------------------------------------
+
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
