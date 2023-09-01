@@ -72,7 +72,7 @@ public:
         *reinterpret_cast<void**>(reinterpret_cast<allocator_bord::detour_type*>(reinterpret_cast<size_t*>(reinterpret_cast<logger**>(reinterpret_cast<memory**>(global_memory)+1)+1)+1)+1) = nullptr;
 
         //std::cout<<"--------------------------------"<<std::endl;
-        dump_allocator_state(false);
+        //dump_allocator_state(false);
     }
 
 private:
@@ -192,9 +192,9 @@ public:
             *get_block_prev(res_block_next) = res_block;
         }
 
-        dump_allocator_state(true);
+        //dump_allocator_state(true);
 
-        std::cout << *get_block_size(res_block) << std::endl;
+        //std::cout << *get_block_size(res_block) << std::endl;
         return reinterpret_cast<void *>(reinterpret_cast<unsigned char *>(res_block) + block_service_size());
     }
 
