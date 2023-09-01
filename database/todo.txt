@@ -1,0 +1,15 @@
+add pool: [firstpool] { [border_descriptor] [200000] [best] }
+add scheme: [firstpool] [firstscheme]
+add collection: [firstpool] [firstscheme] [firstcollection] {red black tree}
+insert: [firstpool] [firstscheme] [firstcollection]
+key: [123] [europe]
+value: [dinka] [moderator] [2345] [4567] [34567] [20.03.19] [45]
+read key: [firstpool] [firstscheme] [firstcollection]
+key: [123] [europe]
+update key: [firstpool] [firstscheme] [firstcollection]
+key: [123] [europe]
+value: [diners] [moderator] [2345] [34] [4567] [20.03.19] [300]
+insert: [firstpool] [firstscheme] [firstcollection]
+key: [125] [europe]
+value: [roman] [admin] [2345] [4567] [34567] [20.03.19] [45]
+delete pool: [firstpool]
