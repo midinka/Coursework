@@ -50,9 +50,9 @@ Before reading key, there must be pool, scheme and collection with key/keys.
 
 read range: [pool_name] [scheme_name] [collection_name]
     ~press enter
-[first_player_id]
+{key: [first_player_id] [first_player_game_zone]}
     ~press enter
-[second_player_id]
+{key: [second_player_id] [second_player_game_zone]}
     ~press enter
 
 ----------------------INFO-------------------------------
