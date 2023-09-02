@@ -12,4 +12,9 @@ value: [diners] [moderator] [2345] [34] [4567] [20.03.19] [300]
 insert: [firstpool] [firstscheme] [firstcollection]
 key: [125] [europe]
 value: [roman] [admin] [2345] [4567] [34567] [20.03.19] [45]
+read key: [firstpool] [firstscheme] [firstcollection]
+key: [125] [europe]
+read range: [firstpool] [firstscheme] [firstcollection]
+{key: [123] [europe]}
+{key: [125] [europe]}
 delete pool: [firstpool]
