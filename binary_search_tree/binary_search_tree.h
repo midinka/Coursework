@@ -1,11 +1,13 @@
-#ifndef BINARY_SEARCH_TREE_BINARY_SEARCH_TREE_H
-#define BINARY_SEARCH_TREE_BINARY_SEARCH_TREE_H
+#ifndef COURSEWORK_BINARY_SEARCH_TREE_H
+#define COURSEWORK_BINARY_SEARCH_TREE_H
 #include <stack>
 #include "../allocators/allocator_2.h"
 #include "associative_container.h"
 #include <functional>
 #include <vector>
 #include <ctime>
+#include "print_bst.h"
+
 #include <limits>
 
 
@@ -15,32 +17,62 @@ protected:
     struct node{
         node() = default;
         node(tkey const &k, tvalue const &v, node* l, node* r):
-            key(k), value(v), left_node(l), right_node(r){}
+                key(k), value(v), left_node(l), right_node(r){}
         tkey key;
         tvalue value;
-        node* right_node;
         node* left_node;
+        node* right_node;
         virtual ~node() = default;
     };
 
     tkey_comparer _comparator;
-    node *_root;
+    node* _root;
     memory *_allocator;
     logger *_logger;
 
 protected:
-    void left_mini_rotate(node** current_node)const{
+    void left_mini_rotate(node** current_node) const{
         node* right_subtree = (*current_node)->right_node;
         (*current_node)->right_node = right_subtree->left_node;
         right_subtree->left_node = (*current_node);
         *current_node = right_subtree;
     }
 
-    void right_mini_rotate(node** current_node)const{
+    void right_mini_rotate(node** current_node) const{
         node* left_subtree = (*current_node)->left_node;
         (*current_node)->left_node = left_subtree->right_node;
         left_subtree->right_node = (*current_node);
         *current_node = left_subtree;
+    }
+protected:
+
+//    virtual void debug_print(void* root) const {
+//        debug_tree_printing<tkey, tvalue>(root);
+//    }
+
+public:
+    void bypass_tree(typename associative_container<tkey, tvalue>::bypass_detour detour ) const override {
+//        if (detour == associative_container<tkey, tvalue>::bypass_detour::prefix) {
+//
+//            for (auto it = prefix_it_begin(); it != prefix_it_end(); ++it) {
+//
+//                std::cout << "key: " << std::get<1>(*it) << ", value: \"" << std::get<2>(*it) << "\"" << std::endl;
+//            }
+//        } else if (detour == associative_container<tkey, tvalue>::bypass_detour::postfix) {
+//
+//            for (auto it = postfix_it_begin(); it != postfix_it_end(); it++) {
+//
+//
+//                std::cout << "key: " << std::get<1>(*it) << ", value: \"" << std::get<2>(*it) << "\"" << std::endl;
+//            }
+//
+//        } else {
+//            for (auto it = infix_it_begin(); it != infix_it_end(); it++) {
+//
+//                std::cout << "key: " << std::get<1>(*it) << ", value: \"" << std::get<2>(*it) << "\"" << std::endl;
+//            }
+//        }
+//        debug_print(_root);
     }
 
 
@@ -112,7 +144,7 @@ private:
             }
 
             if (_current_node->left_node== nullptr && _current_node->right_node== nullptr) {
-               while(!_way.empty() && (_way.top()->right_node == _current_node || _way.top()->right_node == nullptr)){
+                while(!_way.empty() && (_way.top()->right_node == _current_node || _way.top()->right_node == nullptr)){
                     while (!_way.empty() && _way.top()->right_node == _current_node) {
                         _current_node = _way.top();
                         _way.pop();
@@ -126,7 +158,7 @@ private:
                 _current_node=_way.top()->right_node;
             }
             return *this;
-        
+
         }
 
         prefix_iterator operator++(int bred){
@@ -285,7 +317,7 @@ private:
                 if(_way.top()->right_node!= nullptr){
                     _current_node=_way.top()->right_node;
                     while(_current_node->right_node!= nullptr || _current_node->left_node!= nullptr){
-                       _way.push(_current_node);
+                        _way.push(_current_node);
                         if(_current_node->left_node!=nullptr){
                             _current_node=_current_node->left_node;
                         }else{
@@ -351,7 +383,7 @@ public:
         }
         if(_root->left_node != nullptr){
             while(ptr->left_node != nullptr ){
-               ptr=ptr->left_node;
+                ptr=ptr->left_node;
             }
         }else{
             while(ptr->left_node== nullptr && ptr->right_node != nullptr){
@@ -361,7 +393,7 @@ public:
                 ptr = ptr->left_node;
             }
         }
-        
+
         return postfix_iterator(ptr, const_cast<binary_search_tree<tkey, tvalue, tkey_comparer>*>(this));
     }
     postfix_iterator postfix_it_end()const noexcept{
@@ -373,47 +405,82 @@ public:
     /////////////class find_class//////////////////////
 protected:
     class find_class{
+    private:
+        binary_search_tree<tkey, tvalue, tkey_comparer>* _tree;
     public:
-        virtual void after_find(typename associative_container<tkey, tvalue>::key_value_pair* key_value_to_find, node*& current_node, std::stack<node**> way_to_find_node){
-
+        explicit find_class(binary_search_tree<tkey, tvalue, tkey_comparer>* tree){
+            _tree=tree;
         }
-
-        bool find_inner(typename associative_container<tkey, tvalue>::key_value_pair* key_value_to_find, node*& current_node, std::stack<node**> way_to_find_node){
-            if(current_node == nullptr){
-                return false;
-            }
-            tkey_comparer comparer;
-            int res=comparer(current_node->key, key_value_to_find->_key);
-            bool res_find=false;
-            if(res == 0){
+    public:
+        bool find_inner(typename associative_container<tkey, tvalue>::key_value_pair* key_value_to_find, node** root, logger* log, std::stack<node*>* way_to_find) {
+            if ((*root) == nullptr) return false;
+            tkey_comparer comparator = tkey_comparer();
+            if (comparator(key_value_to_find->_key, (*root)->key) == 0 && key_value_to_find->_value == (*root)->value) {
                 return true;
             }
-            if (current_node->right_node== nullptr && current_node->left_node== nullptr){
-                return false;
+            node *current_node = *root;
+            way_to_find->push(*root);
+            while ((current_node->right_node != nullptr) && (comparator(current_node->key, key_value_to_find->_key) < 0) || (current_node->left_node != nullptr) && (comparator(current_node->key, key_value_to_find->_key) > 0)) {
+                if (comparator(current_node->key, key_value_to_find->_key) > 0) {
+                    current_node = current_node->left_node;
+                    way_to_find->push(current_node);
+                } else {
+                    current_node = current_node->right_node;
+                    way_to_find->push(current_node);
+                }
+                if (comparator(key_value_to_find->_key, current_node->key) == 0 &&
+                    key_value_to_find->_value == current_node->value)
+                    return true;
             }
-            node* ptr=current_node;
-            if (res>0){
-                ptr=ptr->left_node;
-            }else{
-                ptr=ptr->right_node;
-            }
-            way_to_find_node.push(&ptr);
-            res_find=find_inner(key_value_to_find,  ptr, way_to_find_node);
-            way_to_find_node.pop();
-            after_find(key_value_to_find,  current_node, way_to_find_node);
-            return res_find;
-
+            return false;
+        }
+        virtual void after_find(typename associative_container<tkey, tvalue>::key_value_pair* key_value_to_find, node** root, logger* log, std::stack<node*>* way_to_find){
 
         }
-
-    public:
-        bool find(typename associative_container<tkey, tvalue>::key_value_pair* key_value_to_find, node*& current_node){
-            std::stack<node**> way_to_find_node;
-            return find_inner(key_value_to_find,  current_node, way_to_find_node);
-        }
-
-        virtual ~find_class() noexcept= default;
+        virtual ~find_class() = default;
     };
+//    class find_class{
+//    public:
+//        virtual void after_find(typename associative_container<tkey, tvalue>::key_value_pair* key_value_to_find, node*& current_node, std::stack<node**> way_to_find_node){
+//
+//        }
+
+//        bool find_inner(typename associative_container<tkey, tvalue>::key_value_pair* key_value_to_find, node*& current_node, std::stack<node**> way_to_find_node){
+//            if(current_node == nullptr){
+//                return false;
+//            }
+//            tkey_comparer comparer;
+//            int res=comparer(current_node->key, key_value_to_find->_key);
+//            bool res_find=false;
+//            if(res == 0){
+//                return true;
+//            }
+//            if (current_node->right_node== nullptr && current_node->left_node== nullptr){
+//                return false;
+//            }
+//            node* ptr=current_node;
+//            if (res>0){
+//                ptr=ptr->left_node;
+//            }else{
+//                ptr=ptr->right_node;
+//            }
+//            way_to_find_node.push(&ptr);
+//            res_find=find_inner(key_value_to_find,  ptr, way_to_find_node);
+//            way_to_find_node.pop();
+//            after_find(key_value_to_find,  current_node, way_to_find_node);
+//            return res_find;
+//
+//
+//        }
+//
+//    public:
+//        bool find(typename associative_container<tkey, tvalue>::key_value_pair* key_value_to_find, node*& current_node){
+//            std::stack<node**> way_to_find_node;
+//            return find_inner(key_value_to_find,  current_node, way_to_find_node);
+//        }
+//
+//        virtual ~find_class() noexcept = default;
+//    };
 
 
 
@@ -445,6 +512,7 @@ protected:
             tkey_comparer comparator = tkey_comparer();
             if (*current_node == nullptr){
                 *current_node = reinterpret_cast<node*>(allocator->allocate(get_size_of_node()));
+                if (*current_node == nullptr) throw std::logic_error("Too few memory...");
                 get_node_constructor(current_node, key, value);
                 way_to_insert->push(*current_node);
                 if (logger != nullptr){
@@ -478,12 +546,13 @@ protected:
                 tmp = &way_to_insert->top()->left_node;
             }
             (*tmp) = reinterpret_cast<node*>(allocator->allocate(get_size_of_node()));
+            if (*tmp == nullptr) throw std::logic_error("Too few memory...");
             get_node_constructor(tmp, key, value);
             way_to_insert->push(*tmp);
             if (logger!=nullptr){
                 logger->log("NEW NODE ADDED ", logger::severity::debug);
             }
-            
+
         }
     public:
         virtual void insert_after(const tkey &key, const tvalue& value, node** current_node, std::stack<node *>* way_to_insert, logger* logger){
@@ -504,7 +573,7 @@ protected:
         explicit remove_class(binary_search_tree<tkey, tvalue, tkey_comparer> *tree){
             _tree = tree;
         }
-        
+
     protected:
         virtual void destruct_node(node* node_to_destruct) const{
             node_to_destruct->~node();
@@ -512,11 +581,11 @@ protected:
         virtual void additional_work(node* current, node* dad, size_t& side, size_t& additional) const {}
 
     public:
-        tvalue remove_inner(const tkey &key, node** current_node, std::stack<node*>* way_to_remove, memory* allocator, logger* logger, size_t& side, size_t& additional){
+        virtual tvalue remove_inner(const tkey &key, node** current_node, std::stack<node*>* way_to_remove, memory* allocator, logger* logger, size_t& side, size_t& additional){
             node* current_node1 = *current_node;
             int f = 2;
             tkey_comparer comparator = tkey_comparer();
-            
+
             while(current_node1 != nullptr && (comparator(key,current_node1->key) != 0)){
                 way_to_remove->push(current_node1);
                 if (comparator(key,current_node1->key) > 0){
@@ -563,7 +632,7 @@ protected:
                 }
 
                 if (current_node1->left_node == nullptr && current_node1->right_node != nullptr){
-                     if(current_node1 == *current_node){
+                    if(current_node1 == *current_node){
                         *current_node = current_node1->left_node;
                     }
                     else f == 0 ? way_to_remove->top()->left_node = current_node1->left_node : way_to_remove->top()->right_node = current_node1->left_node;
@@ -596,9 +665,9 @@ protected:
                     current_node1->value = tmp_node->value;
                     current_node1->right_node = tmp_node->right_node;
 
-                    destruct_node(current_node1);
+                    destruct_node(tmp_node);
                     allocator->deallocate(reinterpret_cast<void*>(tmp_node));
-                    
+
                     if (logger != nullptr){
                         logger->log("Node was deleted ", logger::severity::debug);
                     }
@@ -618,7 +687,7 @@ protected:
 
                     destruct_node(current_node1);
                     allocator->deallocate(reinterpret_cast<void*>(tmp_node));
-                    
+
 
                     if (logger != nullptr){
                         logger->log("Node was deleted ", logger::severity::debug);
@@ -626,8 +695,8 @@ protected:
                     return val_to_remove;
                 }
 
-            }            
-        
+            }
+            throw std::logic_error("Node wasn't deleted");
         }
 
         virtual void remove_after(const tkey & key, node** current_node, logger* logger, std::stack<node*> *way_to_remove, size_t& side, size_t& dop){
@@ -648,11 +717,79 @@ protected:
     insert_class* _class_insert;
     remove_class* _class_remove;
 
+public:
+    bool find_key(const tkey& key_to_find){
+        if ((_root) == nullptr) return false;
+        tkey_comparer comparator = tkey_comparer();
+        if (comparator(key_to_find, (_root)->key) == 0) {
+            return true;
+        }
+        node *current_node = _root;
+        while ((current_node->right_node != nullptr) && (comparator(current_node->key, key_to_find) < 0) || (current_node->left_node != nullptr) && (comparator(current_node->key, key_to_find) > 0)) {
+            if (comparator(current_node->key, key_to_find) > 0) {
+                current_node = current_node->left_node;
+            } else {
+                current_node = current_node->right_node;
+            }
+            if (comparator(key_to_find, current_node->key) == 0)
+                return true;
+        }
+        return false;
+    }
+
+    tkey& find_ref_key(const tkey &key_to_find) const{
+        if ((_root) == nullptr) {
+            throw std::logic_error("Empty");
+        }
+        tkey_comparer comparator = tkey_comparer();
+        if (comparator(key_to_find, (_root)->key) == 0) {
+            return _root->key;
+        }
+        node *current_node = _root;
+        while ((current_node->right_node != nullptr) && (comparator(current_node->key, key_to_find) < 0) || (current_node->left_node != nullptr) && (comparator(current_node->key, key_to_find) > 0)) {
+            if (comparator(current_node->key, key_to_find) > 0) {
+                current_node = current_node->left_node;
+            } else {
+                current_node = current_node->right_node;
+            }
+            if (comparator(key_to_find, current_node->key) == 0)
+                return current_node->key;
+        }
+        throw std::logic_error("There is no key");
+    }
+
+    void update_key(const tkey& key_to_update, const tvalue& new_value) {
+        if ((_root) == nullptr) {
+            throw std::logic_error("Empty");
+        }
+        tkey_comparer comparator = tkey_comparer();
+        if (comparator(key_to_update, (_root)->key) == 0) {
+            _root->value = new_value;
+        }
+        node *current_node = _root;
+        while ((current_node->right_node != nullptr) && (comparator(current_node->key, key_to_update) < 0) || (current_node->left_node != nullptr) && (comparator(current_node->key, key_to_update) > 0)) {
+            if (comparator(current_node->key, key_to_update) > 0) {
+                current_node = current_node->left_node;
+            } else {
+                current_node = current_node->right_node;
+            }
+            if (comparator(key_to_update, current_node->key) == 0)
+                current_node->value = new_value;
+        }
+    }
+
 
 
 public:
-    bool find(typename associative_container<tkey, tvalue>::key_value_pair* key_value_to_find)override{
-        return _class_find->find(key_value_to_find,_root);
+//    bool find(typename associative_container<tkey, tvalue>::key_value_pair* key_value_to_find)override{
+//        return _class_find->find(key_value_to_find,_root);
+//    }
+
+    bool find(typename associative_container<tkey, tvalue>::key_value_pair* key_value_to_find) override{
+         std::stack<node*> find_way = std::stack<node*>();
+         bool result = _class_find->find_inner(key_value_to_find, &_root, this->_logger, &find_way);
+        _class_find->after_find(key_value_to_find, &_root, this->_logger, &find_way);
+         return result;
     }
 
     void insert(const tkey &key, const tvalue& value)override{
@@ -672,7 +809,7 @@ public:
         std::stack<node*> way_to_remove = std::stack<node*>();
         tvalue val_to_remove = _class_remove->remove_inner(key, current_root, &way_to_remove, _allocator, _logger,side, dop);
         return val_to_remove;
-        }
+    }
 
 public:
     const tvalue& get(const tkey &key) const override {
@@ -690,15 +827,15 @@ public:
         throw std::logic_error("Key not found!");
     }
 
-    void bypass_tree(typename associative_container<tkey,tvalue>::bypass_detour mode) const override{}
+    //void bypass_tree(typename associative_container<tkey,tvalue>::bypass_detour mode) const override{}
 
 
 
 protected:
-binary_search_tree(memory* alloc_tree, logger* log_tree, insert_class* insert):
+    binary_search_tree(memory* alloc_tree, logger* log_tree, insert_class* insert):
             _root(nullptr), _logger(log_tree), _allocator(alloc_tree), _class_insert(insert)
     {
-        _class_find = new find_class();
+        _class_find = new find_class(this);
         _class_remove = new remove_class(this);
 
     }
@@ -734,6 +871,7 @@ protected:
         auto* new_node = reinterpret_cast<node*>(_allocator->allocate(node_size()));
         node_construct(new_node, current_node);
         additional_data(new_node, current_node);
+        throw std::logic_error("copy_inner failed");
     }
 
     virtual size_t node_size() const{
@@ -745,14 +883,14 @@ protected:
     }
 
     virtual void additional_data(node* current_node_copy, node* current_node) const{}
-    
+
 public:
     /////////////tree constructor//////////////////
     binary_search_tree(memory* alloc_tree, logger* log_tree){
         _root = nullptr;
         _logger = log_tree;
         _allocator = alloc_tree;
-        _class_find = new find_class();
+        _class_find = new find_class(this);
         _class_insert = new insert_class(this);
         _class_remove = new remove_class(this);
 
@@ -766,7 +904,7 @@ public:
         _class_find = find;
         _class_insert = insert;
         _class_remove = remove;
-        
+
     }
 
     /////////////tree destructor//////////////////
@@ -855,19 +993,19 @@ public:
             return *this;
         }
     }
-    template <typename tekey, typename tevalue>
-    struct debug_node{
-        debug_node() = default;
-        debug_node(tekey k, tevalue v, debug_node* l, debug_node* r):
-                key(k), value(v), left(l), right(r){}
-
-        tekey key;
-        tevalue value;
-        debug_node* left;
-        debug_node* right;
-
-        virtual ~debug_node() = default;
-    };
+//    template <typename tekey, typename tevalue>
+//    struct debug_node{
+//        debug_node() = default;
+//        debug_node(tekey k, tevalue v, debug_node* l, debug_node* r):
+//                key(k), value(v), left(l), right(r){}
+//
+//        tekey key;
+//        tevalue value;
+//        debug_node* left;
+//        debug_node* right;
+//
+//        virtual ~debug_node() = default;
+//    };
 
 };
 
@@ -876,4 +1014,4 @@ public:
 
 
 
-#endif //BINARY_SEARCH_TREE_BINARY_SEARCH_TREE_H
+#endif //COURSEWORK_BINARY_SEARCH_TREE_H
