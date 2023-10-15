@@ -1,9 +1,16 @@
-#ifndef DATABASE_DATABASE_H
-#define DATABASE_DATABASE_H
+#ifndef COURSEWORK_DATABASE_H
+#define COURSEWORK_DATABASE_H
+
 #include "../red_black_tree/red_black_tree.h"
 #include "../binary_search_tree/associative_container.h"
 #include "../allocators/allocator_2.h"
 #include "../allocators/border_descriptor.h"
+#include "../allocators/buddies.h"
+#include "../allocators/sorted_list.h"
+#include "../pattern_fw/fly_weight.h"
+#include "../avl_tree/avl_tree.h"
+#include "../splay_tree/splay_tree.h"
+
 #include <queue>
 
 class database final{
@@ -11,35 +18,72 @@ class database final{
 public:
     enum class type_of_allocator{
         simple,
-        border_descriptor
+        border_descriptor,
+        buddies,
+        sorted_list
     };
 
     enum class type_of_allocator_detour{
         none,
-        best, 
-        worst, 
+        best,
+        worst,
         first
     };
 
     enum class type_of_tree{
-        red_black
+        red_black,
+        avl,
+        splay
     };
 
 
 private:
     struct player_key final{
         int player_id;
-        std::string game_zone;
+        std::string& game_zone;
+
+        player_key(const int id, const std::string& zone):
+        player_id(id),
+        game_zone(fly_weight::get_instance().get_fly_weight(zone))
+        {}
+
+        player_key& operator=(const player_key& other){
+            this->player_id = other.player_id;
+            this->game_zone = other.game_zone;
+            return *this;
+        }
+
     };
 
     struct player_value final{
-        std::string nickname;
-        std::string status; 
-        std::string valute;
-        std::string premium_valute;
-        std::string experience;
-        std::string date_of_registration;
-        std::string time_in_game;
+        std::string& nickname;
+        std::string& status;
+        std::string& valute;
+        std::string& premium_valute;
+        std::string& experience;
+        std::string& date_of_registration;
+        std::string& time_in_game;
+
+        player_value(const std::string& nick,  const std::string& stat, const std::string& v, const std::string& pr_v, const std::string& exp, const std::string& date, const std::string& time):
+            nickname(fly_weight::get_instance().get_fly_weight(nick)),
+            status(fly_weight::get_instance().get_fly_weight(stat)),
+            valute(fly_weight::get_instance().get_fly_weight(v)),
+            premium_valute(fly_weight::get_instance().get_fly_weight(pr_v)),
+            experience(fly_weight::get_instance().get_fly_weight(exp)),
+            date_of_registration(fly_weight::get_instance().get_fly_weight(date)),
+            time_in_game(fly_weight::get_instance().get_fly_weight(time))
+        {}
+
+        player_value& operator=(const player_value& other){
+            this->nickname = other.nickname;
+            this->status = other.status;
+            this->valute = other.valute;
+            this->premium_valute = other.premium_valute;
+            this->experience = other.experience;
+            this->date_of_registration = other.date_of_registration;
+            this->time_in_game = other.time_in_game;
+            return *this;
+        }
 
         bool operator==(const player_value& other) const{
             if (this->nickname != other.nickname) return false;
@@ -74,7 +118,7 @@ private:
 
         int operator()(const player_key& key1, const player_key& key2) const{
             int res = key1.player_id - key2.player_id;
-            
+
             if (res != 0){
                 return res;
             }else{
@@ -90,7 +134,7 @@ private:
 
     memory* _allocator;
 
-    red_black_tree<std::string, memory*, comparer_string>* _pool_with_allocators; 
+    red_black_tree<std::string, memory*, comparer_string>* _pool_with_allocators;
 
 //////////////constructor//////////////
 public:
@@ -107,7 +151,7 @@ public:
 
     database(const database& other) = delete;
     database(database&& other) = delete;
-    
+
 
 //////////////destructor //////////////
 public:
@@ -134,7 +178,7 @@ private:
         }
         return pool;
 
-    } 
+    }
 
     static red_black_tree<std::string, associative_container<player_key, player_value>*, comparer_string>* scheme_from_str(const std::string& is_scheme, const red_black_tree<std::string, red_black_tree<std::string,associative_container<player_key, player_value>*, comparer_string>*, comparer_string>* pool){
 
@@ -151,7 +195,7 @@ private:
 
     static associative_container<player_key, player_value>* collection_from_str(const std::string& is_collection, const red_black_tree<std::string, associative_container<player_key, player_value>*, comparer_string>* scheme){
         associative_container<player_key, player_value>* collection;
-        
+
         try{
             collection = scheme->get(is_collection);
         }
@@ -175,12 +219,28 @@ private:
             scheme = scheme_from_str(is_scheme_str, pool);
             collection = collection_from_str(is_collection_str, scheme);
         }catch(const std::logic_error& e){
+            fly_weight::get_instance().remove_fly_weight(key.game_zone);
+            fly_weight::get_instance().remove_fly_weight(value.nickname);
+            fly_weight::get_instance().remove_fly_weight(value.status);
+            fly_weight::get_instance().remove_fly_weight(value.valute);
+            fly_weight::get_instance().remove_fly_weight(value.premium_valute);
+            fly_weight::get_instance().remove_fly_weight(value.experience);
+            fly_weight::get_instance().remove_fly_weight(value.date_of_registration);
+            fly_weight::get_instance().remove_fly_weight(value.time_in_game);
             throw e;
         }
 
         try{
             collection->insert(key, value);
         }catch(const std::logic_error& e){
+            fly_weight::get_instance().remove_fly_weight(key.game_zone);
+            fly_weight::get_instance().remove_fly_weight(value.nickname);
+            fly_weight::get_instance().remove_fly_weight(value.status);
+            fly_weight::get_instance().remove_fly_weight(value.valute);
+            fly_weight::get_instance().remove_fly_weight(value.premium_valute);
+            fly_weight::get_instance().remove_fly_weight(value.experience);
+            fly_weight::get_instance().remove_fly_weight(value.date_of_registration);
+            fly_weight::get_instance().remove_fly_weight(value.time_in_game);
             std::string message = "A problem in the collection ";
             message += is_collection_str + " : " + e.what();
             throw std::logic_error(message);
@@ -189,30 +249,36 @@ private:
         _logger->log("Done inserting. ", logger::severity::information);
     }
 
-    void get_value_from_key(const player_key& key, player_value& value, const std::string& is_pool, const std::string& is_scheme, const std::string& is_collection){
+    player_value get_value_from_key(const player_key& key, const std::string& is_pool, const std::string& is_scheme, const std::string& is_collection){
 
         red_black_tree<std::string, red_black_tree<std::string,  associative_container<player_key, player_value>*, comparer_string>*, comparer_string>* pool;
 
         red_black_tree<std::string, associative_container<player_key, player_value>*, comparer_string>* scheme;
 
         associative_container<player_key, player_value>* collection;
-
-        pool = pool_from_str(is_pool);
-        scheme = scheme_from_str(is_scheme, pool);
-        collection = collection_from_str(is_collection, scheme);
+        try {
+            pool = pool_from_str(is_pool);
+            scheme = scheme_from_str(is_scheme, pool);
+            collection = collection_from_str(is_collection, scheme);
+        }catch (const std::logic_error& err){
+            fly_weight::get_instance().remove_fly_weight(key.game_zone);
+            throw err;
+        }
 
         try{
-            value = collection->get(key);          
+            player_value value = collection->get(key);
+            _logger->log("Value by key was read. ", logger::severity::information);
+            return  value;
         }
         catch(const std::logic_error& e){
+            fly_weight::get_instance().remove_fly_weight(key.game_zone);
             std::string message = "A problem in collection: there is no key in " + is_collection;
             throw std::logic_error(message);
         }
 
-        _logger->log("Value by key was read. ", logger::severity::information);
     }
 
-  
+
     std::queue<std::tuple<player_key, player_value>> read_range(const player_key* key1, const player_key* key2, const std::string& is_pool, const std::string& is_scheme, const std::string& is_collection){
 
         if (_logger != nullptr) _logger->log("~~~~~Start reading range~~~~~", logger::severity::debug);
@@ -226,6 +292,8 @@ private:
             scheme = scheme_from_str(is_scheme, pool);
             collection = collection_from_str(is_collection, scheme);
         }catch (const std::logic_error& e){
+            fly_weight::get_instance().remove_fly_weight(key1->game_zone);
+            fly_weight::get_instance().remove_fly_weight(key2->game_zone);
             throw e;
         }
         bool f = true;
@@ -252,12 +320,12 @@ private:
                 if (iterator != collection_bst->infix_it_end()){
                     my_queue.emplace(std::get<1>(*iterator), std::get<2>(*iterator));
                 }
-                }else{
-                    for (; iterator != collection_bst->infix_it_end(); ++iterator){
-                        my_queue.emplace(std::get<1>(*iterator), std::get<2>(*iterator));
-                    }
+            }else{
+                for (; iterator != collection_bst->infix_it_end(); ++iterator){
+                    my_queue.emplace(std::get<1>(*iterator), std::get<2>(*iterator));
+                }
             }
-        
+
         }
         if (_logger != nullptr) _logger->log("~~~~~Finish reading range~~~~~", logger::severity::debug);
 
@@ -277,12 +345,25 @@ private:
             pool = pool_from_str(is_pool);
             scheme = scheme_from_str(is_scheme, pool);
             collection = collection_from_str(is_collection, scheme);
-        }catch(const std::logic_error& e){throw e;}
+        }catch(const std::logic_error& e){
+            fly_weight::get_instance().remove_fly_weight(key.game_zone);
+            throw e;
+        }
 
         try{
-            collection->remove(key);
+            player_value value = collection->remove(key);
+            fly_weight::get_instance().remove_fly_weight(key.game_zone);
+            fly_weight::get_instance().remove_fly_weight(value.nickname);
+            fly_weight::get_instance().remove_fly_weight(value.status);
+            fly_weight::get_instance().remove_fly_weight(value.valute);
+            fly_weight::get_instance().remove_fly_weight(value.premium_valute);
+            fly_weight::get_instance().remove_fly_weight(value.experience);
+            fly_weight::get_instance().remove_fly_weight(value.date_of_registration);
+            fly_weight::get_instance().remove_fly_weight(value.time_in_game);
+
         }
         catch(const std::logic_error& e){
+            fly_weight::get_instance().remove_fly_weight(key.game_zone);
             std::string message = "A problem in collection: there is no key in ";
             message += is_collection;
             throw std::logic_error(message);
@@ -294,9 +375,20 @@ private:
     }
 
     void update_key(const player_key& key, const player_value& value, const std::string& is_pool, const std::string& is_scheme, const std::string& is_collection){
-        //_logger->log(std::to_string(key.player_id), logger::severity::information);
-        this->remove(key, is_pool, is_scheme, is_collection);
-        this->insert(key, value, is_pool, is_scheme, is_collection);
+        try {
+            this->remove(key, is_pool, is_scheme, is_collection);
+            this->insert(key, value, is_pool, is_scheme, is_collection);
+        }catch(const std::logic_error &err){
+            fly_weight::get_instance().remove_fly_weight(key.game_zone);
+            fly_weight::get_instance().remove_fly_weight(value.nickname);
+            fly_weight::get_instance().remove_fly_weight(value.status);
+            fly_weight::get_instance().remove_fly_weight(value.valute);
+            fly_weight::get_instance().remove_fly_weight(value.premium_valute);
+            fly_weight::get_instance().remove_fly_weight(value.experience);
+            fly_weight::get_instance().remove_fly_weight(value.date_of_registration);
+            fly_weight::get_instance().remove_fly_weight(value.time_in_game);
+            throw err;
+        }
 
         _logger->log("Done updating. ", logger::severity::information);
     }
@@ -316,7 +408,7 @@ private:
             std::string message = "Pool '" + is_pool + "' already exists.";
             throw std::logic_error(message);
         }
- 
+
         memory* alloc;
         if (is_allocator == type_of_allocator::simple){
             alloc = new allocator(_logger);
@@ -333,18 +425,35 @@ private:
                 alloc = new allocator_bord(size_for_alloc, _logger, nullptr,allocator_bord::detour_type::worst);
             }
         }
+        else if(is_allocator == type_of_allocator::buddies){
+            alloc = new allocator_buddies(size_for_alloc, _logger, nullptr);
+        }
+        else if(is_allocator == type_of_allocator::sorted_list){
+            if (detour == type_of_allocator_detour::best){
+                alloc = new allocator_sorted_list(size_for_alloc, allocator_sorted_list::types_of_detour::best, _logger,
+                                                  nullptr);
+            }
+            else if (detour == type_of_allocator_detour::first){
+                alloc = new allocator_sorted_list(size_for_alloc, allocator_sorted_list::types_of_detour::first, _logger,
+                                                  nullptr);
+            }
+            else if (detour == type_of_allocator_detour::worst){
+                alloc = new allocator_sorted_list(size_for_alloc, allocator_sorted_list::types_of_detour::worst, _logger,
+                                                  nullptr);
+            }
+        }
 
         auto* pool_tree = reinterpret_cast<red_black_tree<std::string, red_black_tree<std::string, associative_container<player_key, player_value>*, comparer_string>* , comparer_string>*>(alloc->allocate(reinterpret_cast<size_t>(sizeof(red_black_tree<std::string, red_black_tree<std::string, associative_container<player_key, player_value>*, comparer_string>*, comparer_string>))));
-
+        if(pool_tree == nullptr) throw std::logic_error("Too few memory...");
         new (pool_tree) red_black_tree<std::string, red_black_tree<std::string, associative_container<player_key, player_value>*, comparer_string>* , comparer_string>(alloc, _logger);
 
         _database->insert(is_pool, pool_tree);
         _pool_with_allocators->insert(is_pool, alloc);
         _logger->log("Pool was added", logger::severity::information);
-        
+
 
     }
-    
+
     void delete_pool(const std::string& is_pool){
         red_black_tree<std::string, red_black_tree<std::string, associative_container<player_key, player_value>*, comparer_string>* , comparer_string>* pool = pool_from_str(is_pool);
 
@@ -363,7 +472,7 @@ private:
         delete alloc;
         _database->remove(is_pool);
 
-    _logger->log("Pool was deleted", logger::severity::information);
+        _logger->log("Pool was deleted", logger::severity::information);
     }
 
 
@@ -384,6 +493,7 @@ private:
 
         auto* alloc = _pool_with_allocators->get(is_pool);
         auto* tree_scheme = reinterpret_cast<red_black_tree<std::string, associative_container<player_key, player_value>*, comparer_string>*>(alloc->allocate(reinterpret_cast<size_t>(sizeof(red_black_tree<std::string, associative_container<player_key, player_value>*, comparer_string>))));
+        if(tree_scheme == nullptr) throw std::logic_error("Too few memory...");
         new (tree_scheme) red_black_tree<std::string, associative_container<player_key, player_value>*, comparer_string>(alloc, _logger);
         pool->insert(is_scheme, tree_scheme);
 
@@ -439,7 +549,18 @@ private:
         auto* alloc = _pool_with_allocators->get(is_pool);
         if (tree_type == type_of_tree::red_black){
             auto* tree_collection = reinterpret_cast<red_black_tree<player_key, player_value, comparer_player_key>*>(alloc->allocate(reinterpret_cast<size_t>(sizeof(red_black_tree<player_key, player_value, comparer_player_key>))));
+            if(tree_collection == nullptr) throw std::logic_error("Too few memory...");
             new (tree_collection) red_black_tree<player_key, player_value, comparer_player_key>(alloc, _logger);
+            scheme->insert(is_collection, tree_collection);
+        }else if(tree_type == type_of_tree::avl){
+            auto* tree_collection = reinterpret_cast<avl_tree<player_key, player_value, comparer_player_key>*>(alloc->allocate(reinterpret_cast<size_t>(sizeof(avl_tree<player_key, player_value, comparer_player_key>))));
+            if(tree_collection == nullptr) throw std::logic_error("Too few memory...");
+            new (tree_collection) avl_tree<player_key, player_value, comparer_player_key>(alloc, _logger);
+            scheme->insert(is_collection, tree_collection);
+        }else if(tree_type == type_of_tree::splay){
+            auto* tree_collection = reinterpret_cast<splay_tree<player_key, player_value, comparer_player_key>*>(alloc->allocate(reinterpret_cast<size_t>(sizeof(splay_tree<player_key, player_value, comparer_player_key>))));
+            if(tree_collection == nullptr) throw std::logic_error("Too few memory...");
+            new (tree_collection) splay_tree<player_key, player_value, comparer_player_key>(_logger, alloc);
             scheme->insert(is_collection, tree_collection);
         }
 
@@ -455,6 +576,21 @@ private:
         red_black_tree<std::string, associative_container<player_key, player_value>*, comparer_string>* scheme = scheme_from_str(is_scheme , pool );
 
         associative_container<player_key, player_value>* collection = collection_from_str(is_collection, scheme);
+
+        auto begin = dynamic_cast<binary_search_tree<player_key, player_value, comparer_player_key>*>(collection)->infix_it_begin();
+        auto end = dynamic_cast<binary_search_tree<player_key, player_value, comparer_player_key>*>(collection)->infix_it_end();
+        for(; begin != end; begin++){
+            auto& value_to_remove = std::get<2>(*begin);
+            auto& key_to_remove = std::get<1>(*begin);
+            fly_weight::get_instance().remove_fly_weight(key_to_remove.game_zone);
+            fly_weight::get_instance().remove_fly_weight(value_to_remove.nickname);
+            fly_weight::get_instance().remove_fly_weight(value_to_remove.status);
+            fly_weight::get_instance().remove_fly_weight(value_to_remove.valute);
+            fly_weight::get_instance().remove_fly_weight(value_to_remove.premium_valute);
+            fly_weight::get_instance().remove_fly_weight(value_to_remove.experience);
+            fly_weight::get_instance().remove_fly_weight(value_to_remove.date_of_registration);
+            fly_weight::get_instance().remove_fly_weight(value_to_remove.time_in_game);
+        }
 
         auto* alloc = _pool_with_allocators->get(is_pool);
         collection->~associative_container();
@@ -492,7 +628,7 @@ private:
             throw std::logic_error("Invalid key!");
         }
         std::string id_in_str = key_in_str.substr(1, r-1);
-        
+
         //TODO: проверка на валидность введенного ключа
 
         if (id_in_str.empty()){
@@ -505,7 +641,7 @@ private:
         int id = stoi(id_in_str);
 
 
-        key_in_str = key_in_str.substr(r+2); 
+        key_in_str = key_in_str.substr(r+2);
         l = key_in_str.find('[');
         r = key_in_str.find(']');
         if (l != 0 || r == std::string::npos){
@@ -528,15 +664,15 @@ private:
         std::string value_in_string = value.substr(7);
 
         std::string nickname_in_str;
-        std::string status_in_str; 
+        std::string status_in_str;
         std::string valute_in_str;
         std::string premium_valute_in_str;
         std::string experience_in_str;
         std::string date_of_registration_in_str;
-        std::string time_in_game_in_str; 
+        std::string time_in_game_in_str;
         try{
             nickname_in_str = field_pasing(value_in_string, "nickname");
-            status_in_str = field_pasing(value_in_string, "status"); 
+            status_in_str = field_pasing(value_in_string, "status");
             valute_in_str = field_pasing(value_in_string, "valute");
             premium_valute_in_str = field_pasing(value_in_string, "premium value");
             experience_in_str = field_pasing(value_in_string, "experience");
@@ -551,13 +687,13 @@ private:
         if (time_in_game_in_str.empty()) throw std::logic_error("Invalid format of time in game");
 
         if(status_in_str.compare("moderator") == 0 || status_in_str.compare("premium") == 0 || status_in_str.compare("simple") == 0 || status_in_str.compare("admin") == 0){
-            
+
         }else{
             std::cout<<status_in_str<<std::endl;
             throw std::logic_error("Invalid status!");
         }
-        
-        
+
+
 
         player_value res = {nickname_in_str, status_in_str,valute_in_str, premium_valute_in_str, experience_in_str, date_of_registration_in_str, time_in_game_in_str};
 
@@ -573,7 +709,7 @@ private:
             throw std::logic_error("Invalid enter!");
         }
         std::string res = value_in_str.substr(1, r - 1);
-        if (res.empty()){ 
+        if (res.empty()){
             std::string message = "Invalid " + name;
             throw std::logic_error(message);
         }
@@ -604,13 +740,13 @@ private:
 
         res += value_to_output(value);
         return res;
-        
+
     }
     static void coll_sch_pool_parsing(std::string& is_pool, std::string& is_scheme, std::string& is_collection, std::string& command_in_str){
 
         is_pool = field_pasing(command_in_str, "pool name");
         is_scheme = field_pasing(command_in_str, "scheme name");
-        
+
 
         size_t l = command_in_str.find('[');
         size_t r = command_in_str.find(']');
@@ -635,25 +771,25 @@ private:
             std::string is_scheme;
             std::string is_collection;
 
-            try{ 
+            try{
                 coll_sch_pool_parsing(is_pool, is_scheme, is_collection, command_str);
-            } catch(const std::logic_error& ex){ 
-                    throw ex; 
+            } catch(const std::logic_error& ex){
+                throw ex;
             }
 
-            player_key k;
-            player_value v;
+
 
             try{
-                k = std::move(key_parsing(key));
-                v = std::move(value_parsing(value));
+                player_key k = std::move(key_parsing(key));
+                player_value v = std::move(value_parsing(value));
                 insert(k, v, is_pool, is_scheme, is_collection);
+
+                std::string message = " ~~Insert finished!\n--key: [id: " + std::to_string(k.player_id) + ", game zone: " + k.game_zone + "] ";
+                _logger->log(message, logger::severity::warning);
             }catch(const std::logic_error& err) {
                 throw err;
             }
 
-            std::string message = " ~~Insert finished!\n--key: [id: " + std::to_string(k.player_id) + ", game zone: " + k.game_zone + "] ";
-            _logger->log(message, logger::severity::warning);
 
         }
         else if(command.find("read key: ") == 0){
@@ -665,16 +801,17 @@ private:
 
             try{ coll_sch_pool_parsing(is_pool, is_scheme, is_collection, command_str); } catch(const std::logic_error& ex){ throw ex; }
 
-            player_key k;
-            player_value v;
+
 
             try{
-                k = std::move(key_parsing(key));
-                get_value_from_key(k, v, is_pool, is_scheme, is_collection);
+                player_key k = std::move(key_parsing(key));
+                fly_weight::get_instance().remove_fly_weight(k.game_zone);
+                player_value v = get_value_from_key(k, is_pool, is_scheme, is_collection);
+                std::string message = " ~~Reading value from key finished!!\n--key: [id: " + std::to_string(k.player_id) + ", game zone: " + k.game_zone + "] " + value_to_output(v);
+                _logger->log(message, logger::severity::warning);
             }catch(const std::logic_error& ex) {throw ex;}
 
-            std::string message = " ~~Reading value from key finished!!\n--key: [id: " + std::to_string(k.player_id) + ", game zone: " + k.game_zone + "] " + value_to_output(v);
-            _logger->log(message, logger::severity::warning);
+
 
         }
         else if(command.find("update key: ") == 0){
@@ -686,17 +823,15 @@ private:
 
             try{ coll_sch_pool_parsing(is_pool, is_scheme, is_collection, command_str); } catch(const std::logic_error& ex){ throw ex; }
 
-            player_key k;
-            player_value v;
-
             try{
-                k = std::move(key_parsing(key));
-                v = std::move(value_parsing(value));
+                player_key k = std::move(key_parsing(key));
+                player_value v = std::move(value_parsing(value));
                 update_key(k, v, is_pool, is_scheme, is_collection);
+                std::string message = "~~Update key finished!\n--key: [id: " + std::to_string(k.player_id) +  ", game zone: " + k.game_zone + "] ";
+                _logger->log(message, logger::severity::warning);
             }catch(const std::logic_error& ex) {throw ex;}
 
-            std::string message = "~~Update key finished!\n--key: [id: " + std::to_string(k.player_id) +  ", game zone: " + k.game_zone + "] ";
-            _logger->log(message, logger::severity::warning);
+
 
         }
         else if(command.find("remove: ") == 0){
@@ -708,20 +843,21 @@ private:
 
             try{ coll_sch_pool_parsing(is_pool, is_scheme, is_collection, command_str); } catch(const std::logic_error& ex){ throw ex; }
 
-            player_key k;
 
             try{
-                k = std::move(key_parsing(key));
+                player_key k = std::move(key_parsing(key));
+                fly_weight::get_instance().remove_fly_weight(k.game_zone);
                 remove(k, is_pool, is_scheme, is_collection);
+                std::string message = " ~~Remove finished!\n--key: [id: " + std::to_string(k.player_id) +  ", game zone: " + k.game_zone + "] ";
+                _logger->log(message, logger::severity::warning);
             }catch(const std::logic_error& ex) {throw ex;}
 
-            std::string message = " ~~Remove finished!\n--key: [id: " + std::to_string(k.player_id) +  ", game zone: " + k.game_zone + "] ";
-            _logger->log(message, logger::severity::warning);
+
         }
 
 
 
-        //////////////add pool command
+            //////////////add pool command
         else if(command.find("add pool: ") == 0){
             command_str = command.substr(10);
 
@@ -745,7 +881,9 @@ private:
 
             if(alloc_name_str == "border_descriptor") alloc_name = type_of_allocator::border_descriptor;
             else if(alloc_name_str == "simple") alloc_name = type_of_allocator::simple;
-            
+            else if(alloc_name_str == "buddies") alloc_name = type_of_allocator::buddies;
+            else if(alloc_name_str == "sorted_list") alloc_name = type_of_allocator::sorted_list;
+
             else throw std::logic_error("Error: invalid allocator name");
             command_str = command_str.substr(r + 2);
 
@@ -765,7 +903,32 @@ private:
                 if(l != 0) throw std::logic_error("Wrong format of a command!");
             }
 
-            if(alloc_name == type_of_allocator::border_descriptor){
+//            if(alloc_name == type_of_allocator::sorted_list){
+//                l = command_str.find('[');
+//                if(l != 0) throw std::logic_error("Wrong format of a command!");
+//                r = command_str.find("] ");
+//                if(r == std::string::npos) throw std::logic_error("Wrong format of a command!");
+//                std::string detour_str = command_str.substr(1, r - 1);
+//                if(detour_str.empty()) throw std::logic_error("Invalid type of allocator!");
+//
+//                if(detour_str == "first") alloc_mode = type_of_allocator_detour::first;
+//
+//                else if(detour_str == "best") alloc_mode = type_of_allocator_detour::best;
+//
+//                else if(detour_str == "worst") alloc_mode = type_of_allocator_detour::worst;
+//
+//                else throw std::logic_error("Error: invalid mode");
+//
+//                command_str = command_str.substr(r + 2);
+//                l = command_str.find('}');
+//                if(l != 0) throw std::logic_error("Wrong format of a command!");
+//            }else{
+//                alloc_mode = type_of_allocator_detour::none;
+//                l = command_str.find('}');
+//                if(l != 0) throw std::logic_error("Wrong format of a command!");
+//            }
+
+            if(alloc_name == type_of_allocator::border_descriptor || alloc_name == type_of_allocator::sorted_list){
                 l = command_str.find('[');
                 if(l != 0) throw std::logic_error("Wrong format of a command!");
                 r = command_str.find("] ");
@@ -797,7 +960,7 @@ private:
         }
 
 
-        ///////////delete pool command
+            ///////////delete pool command
         else if(command.find("delete pool: ") == 0){
             command_str = command.substr(13);
 
@@ -816,7 +979,7 @@ private:
             _logger->log(message, logger::severity::warning);
         }
 
-        ////////////add scheme command
+            ////////////add scheme command
         else if(command.find("add scheme: ") == 0){
             command_str = command.substr(12);
 
@@ -838,7 +1001,7 @@ private:
 
             _logger->log(message, logger::severity::warning);
         }
-        ///////////delete scheme command
+            ///////////delete scheme command
         else if(command.find("delete scheme: ") == 0){
             command_str = command.substr(15);
 
@@ -861,7 +1024,7 @@ private:
             _logger->log(message, logger::severity::warning);
         }
 
-        /////////////add collection command
+            /////////////add collection command
         else if(command.find("add collection: ") == 0){
             command_str = command.substr(16);
 
@@ -884,6 +1047,9 @@ private:
             if(tree_name_str.empty()) throw std::logic_error("Invalid tree name!");
 
             else if(tree_name_str == "red black tree") tree_name = type_of_tree::red_black;
+            else if(tree_name_str == "avl tree") tree_name = type_of_tree::avl;
+            else if(tree_name_str == "splay tree") tree_name = type_of_tree::splay;
+
             else throw std::logic_error("Invalid tree name!");
 
             try{ add_collection(collection_name, pool_name, scheme_name, tree_name); } catch(const std::logic_error& ex){ throw ex; }
@@ -891,7 +1057,7 @@ private:
             std::string message = "***** Collection " + collection_name + " was added in pool " + pool_name + " in scheme " + scheme_name + "!";
             _logger->log(message, logger::severity::warning);
         }
-        ////////////delete collection command
+            ////////////delete collection command
         else if(command.find("delete collection: ") == 0){
             command_str = command.substr(19);
 
@@ -905,7 +1071,7 @@ private:
             }catch(const std::logic_error& ex) { throw ex; }
 
             std::string message = "***** Collection " + collection_name + "was deleted from pool " + pool_name + " in scheme " + scheme_name + "!";
-        
+
             _logger->log(message, logger::severity::warning);
         }
         else if (command.find("read range: ") == 0){
@@ -918,51 +1084,51 @@ private:
             }catch(const std::logic_error& er){
                 throw er;
             }
-            player_key key1;
             player_key* key1_ptr;
-            player_key key2;
             player_key* key2_ptr;
-            l = key.find('[');
-        if (l != 0){
-            throw std::logic_error("Incorrect input: not enough '[' !");
-        }
+            l = key.find('{');
+            if (l != 0){
+                throw std::logic_error("Incorrect input: not enough '[' !");
+            }
 
-        r = key.find(']');
-        if (r == std::string::npos){
-            throw std::logic_error("Incorrect input: not enough '[' !");
-        }
-        key = key.substr(l + 1, r -1);
-        if (!key.empty()){
-            try{
-            key1 = std::move(key_parsing(key));
-            key1_ptr = &key1;
-        }catch (const std::logic_error& er){
-            throw er;
-        }
-        }else{
-            key1_ptr = nullptr;
-        }
-        l = value.find('[');
-        if (l != 0){
-            throw std::logic_error("Incorrect input: not enough '[' !");
-        }
+            r = key.find('}');
+            if (r == std::string::npos){
+                throw std::logic_error("Incorrect input: not enough '[' !");
+            }
+            key = key.substr(l + 1, r -1);
+            if (!key.empty()){
+                try{
+                    player_key key1 = std::move(key_parsing(key));
+                    fly_weight::get_instance().remove_fly_weight(key1.game_zone);
+                    key1_ptr = &key1;
+                }catch (const std::logic_error& er){
+                    throw er;
+                }
+            }else{
+                key1_ptr = nullptr;
+            }
+            l = value.find('{');
+            if (l != 0){
+                throw std::logic_error("Incorrect input: not enough '[' !");
+            }
 
-        r = value.find(']');
-        if (r == std::string::npos){
-            throw std::logic_error("Incorrect input: not enough '[' !");
-        }
-        value = value.substr(l + 1, r -1);
-        if (!value.empty()){
-            try{
-            key2 = std::move(key_parsing(value));
-            key2_ptr = &key2;
-        }catch (const std::logic_error& er){
-            throw er;
-        }
-        }else{
-            key2_ptr = nullptr;
-        }
-        std::queue<std::tuple<player_key, player_value>> result;
+            r = value.find('}');
+            if (r == std::string::npos){
+                throw std::logic_error("Incorrect input: not enough '[' !");
+            }
+            value = value.substr(l + 1, r -1);
+            if (!value.empty()){
+                try{
+                    player_key key2 = std::move(key_parsing(value));
+                    fly_weight::get_instance().remove_fly_weight(key2.game_zone);
+                    key2_ptr = &key2;
+                }catch (const std::logic_error& er){
+                    throw er;
+                }
+            }else{
+                key2_ptr = nullptr;
+            }
+            std::queue<std::tuple<player_key, player_value>> result;
             try{
                 result = read_range(key1_ptr, key2_ptr, pool_name, scheme_name, collection_name);
             }catch (const std::logic_error& er){
@@ -970,13 +1136,13 @@ private:
             }
             std::string message;
             if (result.empty()){
-            message = "Problem: there are no such data!";
+                message = "Problem: there are no such data!";
             }else{
                 std::cout << "----------Reading range----------" << std::endl;
                 while (!result.empty()){
 
                     message += key_and_value_print(std::make_pair(std::get<0>(result.front()), std::get<1>(result.front())));
-                    
+
                     std::cout << message << std::endl;
                     result.pop();
                     message = "";
@@ -1067,7 +1233,6 @@ public:
             _logger->log("\n------------------------------------------\n\n ~~~~~Choose an action ~~~~~\n\n1) Run commands in a file\n2) Enter a command manually\n3) Reset database\n4) Exit\n\n~~~~~ Enter:", logger::severity::warning);
             std::cin.clear();
             getline(std::cin, action);
-            std::cout<<action<<std::endl;
 
             if(action == "1"){
 
@@ -1217,4 +1382,5 @@ public:
 };
 
 
-#endif //DATABASE_DATABASE_H
+
+#endif //COURSEWORK_DATABASE_H
