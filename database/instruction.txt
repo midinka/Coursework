@@ -92,7 +92,7 @@ Make sure there is a key which you want to update.
 
 ----------------------REMOVE-----------------------------
 
-insert: [pool_name] [scheme_name] [collection_name]
+remove: [pool_name] [scheme_name] [collection_name]
     ~press enter
 key: [id] [game_zone]
     ~press enter
