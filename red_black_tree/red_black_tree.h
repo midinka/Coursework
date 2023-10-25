@@ -1,5 +1,6 @@
-#ifndef RED_BLACK_TREE_RED_BLACK_TREE_H
-#define RED_BLACK_TREE_RED_BLACK_TREE_H
+#ifndef COURSEWORK_RED_BLACK_TREE_H
+#define COURSEWORK_RED_BLACK_TREE_H
+
 #include "../binary_search_tree/binary_search_tree.h"
 
 
@@ -11,17 +12,16 @@ class red_black_tree final: public binary_search_tree<tkey, tvalue, tkey_compare
 
 private:
     enum class color{
-        red, 
+        red,
         black
     };
 
     struct rb_node final: public binary_search_tree<tkey, tvalue, tkey_comparer>::node {
         rb_node() = default;
         rb_node(const tkey& key, const tvalue& value, rb_node* left, rb_node* right, color col):
-            binary_search_tree<tkey, tvalue,tkey_comparer>::node(key, value, left, right){
-        node_color = col;
+                binary_search_tree<tkey, tvalue,tkey_comparer>::node(key, value, left, right){
+            node_color = col;
         }
-
         color node_color;
         virtual ~rb_node() = default;
     };
@@ -36,9 +36,13 @@ private:
             return sizeof(rb_node);
         };
 
+        void get_node_constructor(typename binary_search_tree<tkey, tvalue, tkey_comparer>::node** x, const tkey& key, const tvalue& value) const override {
+            new (*x) rb_node {key, value, nullptr, nullptr, color::red};
+        }
+
     public:
         explicit rb_insert_class(red_black_tree<tkey, tvalue, tkey_comparer> *tree):
-            binary_search_tree<tkey, tvalue, tkey_comparer>::insert_class(tree){}
+                binary_search_tree<tkey, tvalue, tkey_comparer>::insert_class(tree){}
 
     private:
         void insert_fixup(std::stack<rb_node *>* _way_to_insert, rb_node** root){
@@ -65,7 +69,7 @@ private:
                         _way_to_insert->top()->node_color = color::red;
                         insert_fixup(_way_to_insert, root);
                     }
-                    //uncle - black
+                        //uncle - black
                     else{
                         rb_node* grand = _way_to_insert->top();
                         rb_node* greatgrand;
@@ -88,12 +92,12 @@ private:
                                     if (grand == greatgrand->left_node){
                                         _tree->right_mini_rotate(reinterpret_cast<typename binary_search_tree<tkey, tvalue, tkey_comparer>::node**>(&greatgrand->left_node));
                                     }
-                                    // third: grand is right
+                                        // third: grand is right
                                     else{
                                         _tree->right_mini_rotate(reinterpret_cast<typename binary_search_tree<tkey, tvalue, tkey_comparer>::node**>(&greatgrand->right_node));
                                     }
                                     //end third
-                                
+
                                 }else{//(if greatgrand == nullptr)
                                     _tree->right_mini_rotate(reinterpret_cast<typename binary_search_tree<tkey, tvalue, tkey_comparer>::node**>(root));
                                 }
@@ -102,7 +106,7 @@ private:
                                 grand->node_color = color::red;
 
                             }
-                            // second: target is right
+                                // second: target is right
                             else{
                                 _tree->left_mini_rotate(reinterpret_cast<typename binary_search_tree<tkey, tvalue, tkey_comparer>::node**>(&grand->left_node));
 
@@ -112,12 +116,12 @@ private:
                                     if (grand == greatgrand->left_node){
                                         _tree->right_mini_rotate(reinterpret_cast<typename binary_search_tree<tkey, tvalue, tkey_comparer>::node**>(&greatgrand->left_node));
                                     }
-                                    // third: grand is right
+                                        // third: grand is right
                                     else{
                                         _tree->right_mini_rotate(reinterpret_cast<typename binary_search_tree<tkey, tvalue, tkey_comparer>::node**>(&greatgrand->right_node));
                                     }
                                     //end third
-                                
+
                                 }else{//(if greatgrand == nullptr)
                                     _tree->right_mini_rotate(reinterpret_cast<typename binary_search_tree<tkey, tvalue, tkey_comparer>::node**>(root));
                                 }
@@ -130,7 +134,7 @@ private:
 
 
                         }
-                        // first: father is right 
+                            // first: father is right
                         else{
                             // fourth: target is right or left
                             // fourth: target is left
@@ -142,12 +146,12 @@ private:
                                     if (grand == greatgrand->left_node){
                                         _tree->left_mini_rotate(reinterpret_cast<typename binary_search_tree<tkey, tvalue, tkey_comparer>::node**>(&greatgrand->left_node));
                                     }
-                                    // fifth: grand is right
+                                        // fifth: grand is right
                                     else{
                                         _tree->left_mini_rotate(reinterpret_cast<typename binary_search_tree<tkey, tvalue, tkey_comparer>::node**>(&greatgrand->right_node));
                                     }
                                     //end fifth
-                                
+
                                 }else{//(if greatgrand == nullptr)
                                     _tree->left_mini_rotate(reinterpret_cast<typename binary_search_tree<tkey, tvalue, tkey_comparer>::node**>(root));
                                 }
@@ -156,7 +160,7 @@ private:
                                 grand->node_color = color::red;
 
                             }
-                            // fourth: target is right
+                                // fourth: target is right
                             else{
                                 if (greatgrand != nullptr){
                                     // sixth: grand is right or left
@@ -164,12 +168,12 @@ private:
                                     if (grand == greatgrand->left_node){
                                         _tree->left_mini_rotate(reinterpret_cast<typename binary_search_tree<tkey, tvalue, tkey_comparer>::node**>(&greatgrand->left_node));
                                     }
-                                    // sixth: grand is right
+                                        // sixth: grand is right
                                     else{
                                         _tree->left_mini_rotate(reinterpret_cast<typename binary_search_tree<tkey, tvalue, tkey_comparer>::node**>(&greatgrand->right_node));
                                     }
                                     //end sixth
-                                
+
                                 }else{//(if greatgrand == nullptr)
                                     _tree->left_mini_rotate(reinterpret_cast<typename binary_search_tree<tkey, tvalue, tkey_comparer>::node**>(root));
                                 }
@@ -186,28 +190,36 @@ private:
                     }
                 }
             }
+
+
         }// end insert_fixup
 
     public:
+        void fixup_root(typename binary_search_tree<tkey, tvalue, tkey_comparer>::node *root) override {
+            if (root != nullptr) {
+                reinterpret_cast<rb_node *>(root)->node_color = color::black;
+            }
+        }
+
         void insert_after(const tkey &key,const tvalue &value, typename binary_search_tree<tkey, tvalue, tkey_comparer>::node** current_node, std::stack<typename binary_search_tree<tkey, tvalue, tkey_comparer>::node*>* way_to_insert, logger* logger )override{
             auto** rb_current_node = reinterpret_cast<rb_node**>(current_node);
-            auto* rb_way_to_insert =  reinterpret_cast<std::stack<rb_node*>*>(way_to_insert);
-            if (rb_way_to_insert->size() == 1){
-                rb_way_to_insert->top()->node_color = color::black;
+            auto* rb_way_to_insert = reinterpret_cast<std::stack<rb_node*>*>(way_to_insert);
+            if (way_to_insert->size() == 1){
+                reinterpret_cast<rb_node *>(way_to_insert->top())->node_color = color::black;
                 if (logger != nullptr){
-                    logger->log("Tree was balaced after inserting.", logger::severity::debug);
-                    return;
+                    logger->log("Tree was balanced after inserting.", logger::severity::debug);
+
                 }
             }else{
-                rb_way_to_insert->top()->node_color = color::red;
+                reinterpret_cast<rb_node *>(way_to_insert->top())->node_color = color::red;
                 insert_fixup(rb_way_to_insert, rb_current_node);
                 if (logger != nullptr){
-                    logger->log("Tree was balaced after inserting.", logger::severity::debug);
-                    return;
+                    logger->log("Tree was balanced after inserting.", logger::severity::debug);
                 }
-            }            
+                reinterpret_cast<rb_node *>(*current_node)->node_color = color::black;
+            }
         }
-        
+
     };
     /////////////end rb_insert_class////////////
 
@@ -232,6 +244,12 @@ private:
             rb_current->node_color == color::red ? additional = 0 : additional = 1;
         }
 
+        void fixup_root(typename binary_search_tree<tkey, tvalue, tkey_comparer>::node *root) override {
+            if (root != nullptr) {
+                reinterpret_cast<rb_node *>(root)->node_color = color::black;
+            }
+        }
+
         void remove_fixup(std::stack<rb_node*>* way_to_remove, size_t& side, size_t& dop, rb_node* rb_root){
             rb_node* brother;
             rb_node* father = way_to_remove->top();
@@ -248,7 +266,7 @@ private:
                     father->node_color = color::black;
                     brother->node_color = color::red;
                 }
-                //2.1
+                    //2.1
                 else if (father->node_color == color::red && brother->node_color == color::black && brother->left_node != nullptr && reinterpret_cast<rb_node*>(brother->left_node)->node_color == color::red){
                     brother->node_color = color::red;
                     reinterpret_cast<rb_node*>(brother->left_node)->node_color = color::black;
@@ -266,7 +284,7 @@ private:
                     }
 
                 }
-                //2.2 
+                    //2.2
                 else if(father->node_color == color::red && brother->node_color == color::black && brother->right_node != nullptr && reinterpret_cast<rb_node*>(brother->right_node)->node_color == color::red){
                     brother->node_color = color::red;
                     reinterpret_cast<rb_node*>(brother->right_node)->node_color = color::black;
@@ -292,32 +310,32 @@ private:
                     }
 
                 }
-                //3
+                    //3
                 else if(father->node_color == color::black &&
                         brother->node_color == color::red &&
                         brother->right_node != nullptr &&
                         reinterpret_cast<rb_node*>(brother->right_node)->node_color == color::black &&
                         (reinterpret_cast<rb_node*>(reinterpret_cast<rb_node*>(brother->right_node)->left_node)->node_color == color::black || reinterpret_cast<rb_node*>(brother->right_node)->left_node == nullptr) &&
                         (reinterpret_cast<rb_node*>(reinterpret_cast<rb_node*>(brother->right_node)->right_node)->node_color == color::black || reinterpret_cast<rb_node*>(brother->right_node)->right_node == nullptr))
-                        {
-                            reinterpret_cast<rb_node*>(brother->right_node)->node_color= color::red;
-                            brother->node_color = color::black;
-                            //поворот вправо
-                            if(!way_to_remove->empty()){
-                                if(father == way_to_remove->top()->right_node){
-                                    _tree->right_mini_rotate(reinterpret_cast<typename binary_search_tree<tkey, tvalue, tkey_comparer>::node**>(&(way_to_remove->top()->right_node)));
-                                }else{
-                                    _tree->right_mini_rotate(reinterpret_cast<typename binary_search_tree<tkey, tvalue, tkey_comparer>::node**>(&(way_to_remove->top()->left_node)));
-                                }
-                            }
-                            else{
-                                _tree->right_mini_rotate(reinterpret_cast<typename binary_search_tree<tkey, tvalue, tkey_comparer>::node**>(rb_root));
-                            }
+                {
+                    reinterpret_cast<rb_node*>(brother->right_node)->node_color= color::red;
+                    brother->node_color = color::black;
+                    //поворот вправо
+                    if(!way_to_remove->empty()){
+                        if(father == way_to_remove->top()->right_node){
+                            _tree->right_mini_rotate(reinterpret_cast<typename binary_search_tree<tkey, tvalue, tkey_comparer>::node**>(&(way_to_remove->top()->right_node)));
+                        }else{
+                            _tree->right_mini_rotate(reinterpret_cast<typename binary_search_tree<tkey, tvalue, tkey_comparer>::node**>(&(way_to_remove->top()->left_node)));
+                        }
+                    }
+                    else{
+                        _tree->right_mini_rotate(reinterpret_cast<typename binary_search_tree<tkey, tvalue, tkey_comparer>::node**>(rb_root));
+                    }
                 }
-                //4
-                else if(father->node_color == color::black && brother->node_color == color::red && brother->right_node != nullptr && reinterpret_cast<rb_node*>(brother->right_node)->node_color == color::black && 
-                (brother->right_node)->left_node != nullptr &&
-                reinterpret_cast<rb_node*>(reinterpret_cast<rb_node*>(brother->right_node)->left_node)->node_color == color::red){
+                    //4
+                else if(father->node_color == color::black && brother->node_color == color::red && brother->right_node != nullptr && reinterpret_cast<rb_node*>(brother->right_node)->node_color == color::black &&
+                        (brother->right_node)->left_node != nullptr &&
+                        reinterpret_cast<rb_node*>(reinterpret_cast<rb_node*>(brother->right_node)->left_node)->node_color == color::red){
                     reinterpret_cast<rb_node*>(reinterpret_cast<rb_node*>(brother->right_node)->left_node)->node_color = color::black;
                     //большой поворот
                     _tree->left_mini_rotate(reinterpret_cast<typename binary_search_tree<tkey, tvalue, tkey_comparer>::node**>(&(father->left_node)));
@@ -334,10 +352,10 @@ private:
                     }
 
                 }
-                //4.2
-                else if(father->node_color == color::black && brother->node_color == color::red && brother->right_node != nullptr && reinterpret_cast<rb_node*>(brother->right_node)->node_color == color::black && 
-                (brother->right_node)->right_node != nullptr &&
-                reinterpret_cast<rb_node*>(reinterpret_cast<rb_node*>(brother->right_node)->right_node)->node_color == color::red){
+                    //4.2
+                else if(father->node_color == color::black && brother->node_color == color::red && brother->right_node != nullptr && reinterpret_cast<rb_node*>(brother->right_node)->node_color == color::black &&
+                        (brother->right_node)->right_node != nullptr &&
+                        reinterpret_cast<rb_node*>(reinterpret_cast<rb_node*>(brother->right_node)->right_node)->node_color == color::red){
                     reinterpret_cast<rb_node*>(reinterpret_cast<rb_node*>(brother->right_node)->right_node)->node_color = color::black;
                     reinterpret_cast<rb_node*>(brother->right_node)->node_color = color::red;
 
@@ -359,10 +377,10 @@ private:
                     }
 
                 }
-                //5
+                    //5
                 else if(father->node_color == color::black && brother->node_color == color::black && brother->right_node != nullptr && reinterpret_cast<rb_node*>(brother->right_node)->node_color == color::red){
                     //внука в черный и большой поворот влево как из случая 4
-                    reinterpret_cast<rb_node*>(brother->right_node)->node_color == color::black;
+                    reinterpret_cast<rb_node*>(brother->right_node)->node_color = color::black;
 
                     _tree->left_mini_rotate(reinterpret_cast<typename binary_search_tree<tkey, tvalue, tkey_comparer>::node**>(&(father->left_node)));
 
@@ -380,9 +398,9 @@ private:
 
                 }
 
-                //5.2
+                    //5.2
                 else if(father->node_color == color::black && brother->node_color == color::black && brother->left_node != nullptr && reinterpret_cast<rb_node*>(brother->left_node)->node_color == color::red){
-                    reinterpret_cast<rb_node*>(brother->left_node)->node_color == color::black;
+                    reinterpret_cast<rb_node*>(brother->left_node)->node_color = color::black;
 
                     if (!way_to_remove->empty()){
                         if(father==way_to_remove->top()->right_node){
@@ -397,7 +415,7 @@ private:
 
                 }
 
-                //6
+                    //6
                 else if(father->node_color == color::black && brother->node_color == color::black && (brother->right_node != nullptr || reinterpret_cast<rb_node*>(brother->right_node)->node_color == color::black) && (brother->left_node != nullptr || reinterpret_cast<rb_node*>(brother->left_node)->node_color == color::black))
                 {
                     brother->node_color = color::red;
@@ -418,7 +436,7 @@ private:
                 }else{
                     throw std::logic_error("Invalid arguments");
                 }
-                //end side == 1 
+                //end side == 1
             }
             else{
                 //1
@@ -426,7 +444,7 @@ private:
                     father->node_color = color::black;
                     brother->node_color = color::red;
                 }
-                //2.1
+                    //2.1
                 else if (father->node_color == color::red && brother->node_color == color::black && brother->right_node != nullptr && reinterpret_cast<rb_node*>(brother->right_node)->node_color == color::red){
                     brother->node_color = color::red;
                     reinterpret_cast<rb_node*>(brother->right_node)->node_color = color::black;
@@ -444,7 +462,7 @@ private:
                     }
 
                 }
-                //2.2 
+                    //2.2
                 else if(father->node_color == color::red && brother->node_color == color::black && brother->left_node != nullptr && reinterpret_cast<rb_node*>(brother->left_node)->node_color == color::red){
                     brother->node_color = color::red;
                     reinterpret_cast<rb_node*>(brother->left_node)->node_color = color::black;
@@ -470,32 +488,32 @@ private:
                     }
 
                 }
-                //3
+                    //3
                 else if(father->node_color == color::black &&
                         brother->node_color == color::red &&
                         brother->right_node != nullptr &&
                         reinterpret_cast<rb_node*>(brother->left_node)->node_color == color::black &&
                         (reinterpret_cast<rb_node*>(reinterpret_cast<rb_node*>(brother->left_node)->left_node)->node_color == color::black || reinterpret_cast<rb_node*>(brother->left_node)->left_node == nullptr) &&
                         (reinterpret_cast<rb_node*>(reinterpret_cast<rb_node*>(brother->left_node)->right_node)->node_color == color::black || reinterpret_cast<rb_node*>(brother->left_node)->right_node == nullptr))
-                        {
-                            reinterpret_cast<rb_node*>(brother->left_node)->node_color= color::red;
-                            brother->node_color = color::black;
-                            //поворот влево
-                            if(!way_to_remove->empty()){
-                                if(father == way_to_remove->top()->right_node){
-                                    _tree->left_mini_rotate(reinterpret_cast<typename binary_search_tree<tkey, tvalue, tkey_comparer>::node**>(&(way_to_remove->top()->right_node)));
-                                }else{
-                                    _tree->left_mini_rotate(reinterpret_cast<typename binary_search_tree<tkey, tvalue, tkey_comparer>::node**>(&(way_to_remove->top()->left_node)));
-                                }
-                            }
-                            else{
-                                _tree->left_mini_rotate(reinterpret_cast<typename binary_search_tree<tkey, tvalue, tkey_comparer>::node**>(rb_root));
-                            }
+                {
+                    reinterpret_cast<rb_node*>(brother->left_node)->node_color= color::red;
+                    brother->node_color = color::black;
+                    //поворот влево
+                    if(!way_to_remove->empty()){
+                        if(father == way_to_remove->top()->right_node){
+                            _tree->left_mini_rotate(reinterpret_cast<typename binary_search_tree<tkey, tvalue, tkey_comparer>::node**>(&(way_to_remove->top()->right_node)));
+                        }else{
+                            _tree->left_mini_rotate(reinterpret_cast<typename binary_search_tree<tkey, tvalue, tkey_comparer>::node**>(&(way_to_remove->top()->left_node)));
+                        }
+                    }
+                    else{
+                        _tree->left_mini_rotate(reinterpret_cast<typename binary_search_tree<tkey, tvalue, tkey_comparer>::node**>(rb_root));
+                    }
                 }
-                //4
-                else if(father->node_color == color::black && brother->node_color == color::red && brother->left_node != nullptr && reinterpret_cast<rb_node*>(brother->left_node)->node_color == color::black && 
-                (brother->left_node)->right_node != nullptr &&
-                reinterpret_cast<rb_node*>(reinterpret_cast<rb_node*>(brother->left_node)->right_node)->node_color == color::red){
+                    //4
+                else if(father->node_color == color::black && brother->node_color == color::red && brother->left_node != nullptr && reinterpret_cast<rb_node*>(brother->left_node)->node_color == color::black &&
+                        (brother->left_node)->right_node != nullptr &&
+                        reinterpret_cast<rb_node*>(reinterpret_cast<rb_node*>(brother->left_node)->right_node)->node_color == color::red){
                     reinterpret_cast<rb_node*>(reinterpret_cast<rb_node*>(brother->left_node)->right_node)->node_color = color::black;
                     //большой поворот
                     _tree->right_mini_rotate(reinterpret_cast<typename binary_search_tree<tkey, tvalue, tkey_comparer>::node**>(&(father->right_node)));
@@ -512,10 +530,10 @@ private:
                     }
 
                 }
-                //4.2
-                else if(father->node_color == color::black && brother->node_color == color::red && brother->left_node != nullptr && reinterpret_cast<rb_node*>(brother->left_node)->node_color == color::black && 
-                (brother->left_node)->right_node != nullptr &&
-                reinterpret_cast<rb_node*>(reinterpret_cast<rb_node*>(brother->left_node)->right_node)->node_color == color::red){
+                    //4.2
+                else if(father->node_color == color::black && brother->node_color == color::red && brother->left_node != nullptr && reinterpret_cast<rb_node*>(brother->left_node)->node_color == color::black &&
+                        (brother->left_node)->right_node != nullptr &&
+                        reinterpret_cast<rb_node*>(reinterpret_cast<rb_node*>(brother->left_node)->right_node)->node_color == color::red){
                     reinterpret_cast<rb_node*>(reinterpret_cast<rb_node*>(brother->left_node)->left_node)->node_color = color::black;
                     reinterpret_cast<rb_node*>(brother->left_node)->node_color = color::red;
 
@@ -537,10 +555,10 @@ private:
                     }
 
                 }
-                //5
+                    //5
                 else if(father->node_color == color::black && brother->node_color == color::black && brother->left_node != nullptr && reinterpret_cast<rb_node*>(brother->left_node)->node_color == color::red){
                     //внука в черный и большой поворот влево как из случая 4
-                    reinterpret_cast<rb_node*>(brother->left_node)->node_color == color::black;
+                    reinterpret_cast<rb_node*>(brother->left_node)->node_color = color::black;
 
                     _tree->left_mini_rotate(reinterpret_cast<typename binary_search_tree<tkey, tvalue, tkey_comparer>::node**>(&(father->right_node)));
 
@@ -558,9 +576,9 @@ private:
 
                 }
 
-                //5.2
+                    //5.2
                 else if(father->node_color == color::black && brother->node_color == color::black && brother->right_node != nullptr && reinterpret_cast<rb_node*>(brother->right_node)->node_color == color::red){
-                    reinterpret_cast<rb_node*>(brother->right_node)->node_color == color::black;
+                    reinterpret_cast<rb_node*>(brother->right_node)->node_color = color::black;
 
                     if (!way_to_remove->empty()){
                         if(father==way_to_remove->top()->right_node){
@@ -575,7 +593,7 @@ private:
 
                 }
 
-                //6
+                    //6
                 else if(father->node_color == color::black && brother->node_color == color::black && (brother->right_node != nullptr || reinterpret_cast<rb_node*>(brother->right_node)->node_color == color::black) && (brother->left_node != nullptr || reinterpret_cast<rb_node*>(brother->left_node)->node_color == color::black))
                 {
                     brother->node_color = color::red;
@@ -595,14 +613,14 @@ private:
                     }
                 }else{
                     throw std::logic_error("Invalid arguments");
-                } 
+                }
             }
         }
 
-                
-            
 
-        
+
+
+
     public:
         void remove_after(const tkey &key, typename binary_search_tree<tkey, tvalue, tkey_comparer>::node ** current_node, logger* logger, std::stack<typename binary_search_tree<tkey, tvalue, tkey_comparer>:: node *>* way_to_remove, size_t& side, size_t& dop) override{
             auto** rb_current_node = reinterpret_cast<rb_node**>(current_node);
@@ -617,10 +635,13 @@ private:
                     if (dop != 0){
                         if(side == 0){
                             if (reinterpret_cast<typename binary_search_tree<tkey, tvalue, tkey_comparer>::node*>(way_to_remove->top())->left_node != nullptr){
-                                reinterpret_cast<rb_node*>(reinterpret_cast<typename binary_search_tree<tkey, tvalue, tkey_comparer>::node*>(way_to_remove->top())->left_node)->node_color == color::black;
+                                reinterpret_cast<rb_node*>(reinterpret_cast<typename binary_search_tree<tkey, tvalue, tkey_comparer>::node*>(way_to_remove->top())->left_node)->node_color = color::black;
 
                                 if (logger != nullptr){
                                     logger->log("Tree was balanced (after removing)", logger::severity::debug);
+                                }
+                                if (*current_node != nullptr) {
+                                    reinterpret_cast<rb_node *>(*current_node)->node_color = color::black;
                                 }
                                 return;
                             }
@@ -636,16 +657,22 @@ private:
                                 if (logger != nullptr){
                                     logger->log("Tree was balanced (after removing)", logger::severity::debug);
                                 }
+                                if (*current_node != nullptr) {
+                                    reinterpret_cast<rb_node *>(*current_node)->node_color = color::black;
+                                }
                                 return;
                             }
 
                         }
                         else{
                             if (reinterpret_cast<typename binary_search_tree<tkey, tvalue, tkey_comparer>::node*>(way_to_remove->top())->right_node != nullptr){
-                                reinterpret_cast<rb_node*>(reinterpret_cast<typename binary_search_tree<tkey, tvalue, tkey_comparer>::node*>(way_to_remove->top())->right_node)->node_color == color::black;
+                                reinterpret_cast<rb_node*>(reinterpret_cast<typename binary_search_tree<tkey, tvalue, tkey_comparer>::node*>(way_to_remove->top())->right_node)->node_color = color::black;
 
                                 if (logger != nullptr){
                                     logger->log("Tree was balanced (after removing)", logger::severity::debug);
+                                }
+                                if (*current_node != nullptr) {
+                                    reinterpret_cast<rb_node *>(*current_node)->node_color = color::black;
                                 }
                                 return;
                             }else{
@@ -659,39 +686,42 @@ private:
                                 if (logger != nullptr){
                                     logger->log("Tree was balanced (after removing)", logger::severity::debug);
                                 }
+                                if (*current_node != nullptr) {
+                                    reinterpret_cast<rb_node *>(*current_node)->node_color = color::black;
+                                }
                                 return;
 
 
+                            }
                         }
                     }
                 }
             }
-        }
-        
 
-        if (logger != nullptr){
-            logger->log("Tree was balanced (after removing)", logger::severity::debug);
-        }
-    }
 
-    
+            if (logger != nullptr){
+                logger->log("Tree was balanced (after removing)", logger::severity::debug);
+            }
+        }
+
+
     };
 /////////////tree constructor///////////
 public:
 
-    explicit red_black_tree(memory* alloc = nullptr, logger* logger = nullptr): binary_search_tree<tkey, tvalue, tkey_comparer>(alloc, logger, nullptr, new typename binary_search_tree<tkey, tvalue, tkey_comparer>::find_class(), new rb_insert_class(this), new rb_remove_class(this)){
+    explicit red_black_tree(memory* alloc = nullptr, logger* logger = nullptr): binary_search_tree<tkey, tvalue, tkey_comparer>(alloc, logger, nullptr, new typename binary_search_tree<tkey, tvalue, tkey_comparer>::find_class(this), new rb_insert_class(this), new rb_remove_class(this)){
         if (logger!= nullptr){
             logger->log("Red-black tree was created.", logger::severity::debug);
         }
     }
-   
 
-    //копирование 
-    red_black_tree(const red_black_tree<tkey, tvalue, tkey_comparer>& tree){   
+
+    //копирование
+    red_black_tree(const red_black_tree<tkey, tvalue, tkey_comparer>& tree){
         this->_root = tree.copy();
         this->_allocator = tree._allocator;
         this->_logger = tree._logger;
-        this->_class_find = new typename binary_search_tree<tkey, tvalue, tkey_comparer>::find_class();
+        this->_class_find = new typename binary_search_tree<tkey, tvalue, tkey_comparer>::find_class(this);
         this->_class_insert = new rb_insert_class(this);        this->_class_remove = new rb_remove_class(this);
         if (this->_logger != nullptr){
             this->_logger->log("Red-black tree was copied.", logger::severity::debug);
@@ -705,7 +735,7 @@ public:
         this->_root = other._root;
         this->_allocator = other._allocator;
         this->_logger = other._logger;
-        this->_class_find = new typename binary_search_tree<tkey, tvalue, tkey_comparer>::find_class();
+        this->_class_find = new typename binary_search_tree<tkey, tvalue, tkey_comparer>::find_class(this);
         this->_class_insert = new rb_insert_class(this);        this->_class_remove = new rb_remove_class(this);
 
         delete other._class_find;
@@ -732,7 +762,7 @@ public:
         if (this->_logger != nullptr){
             this->_logger->log("Red-black tree was appropriated.", logger::severity::debug);
         }
-        
+
         return *this;
     }
 
@@ -771,4 +801,4 @@ public:
 
 };
 
-#endif //RED_BLACK_TREE_RED_BLACK_TREE_H
+#endif //COURSEWORK_RED_BLACK_TREE_H
