@@ -1,6 +1,7 @@
 #ifndef COURSEWORK_DATABASE_H
 #define COURSEWORK_DATABASE_H
 
+#include <iosfwd>
 #include "../red_black_tree/red_black_tree.h"
 #include "../binary_search_tree/associative_container.h"
 #include "../allocators/allocator_2.h"
@@ -52,6 +53,8 @@ private:
             this->game_zone = other.game_zone;
             return *this;
         }
+
+
 
     };
 
@@ -265,10 +268,11 @@ private:
             throw err;
         }
 
+
         try{
             player_value value = collection->get(key);
             _logger->log("Value by key was read. ", logger::severity::information);
-            return  value;
+            return value;
         }
         catch(const std::logic_error& e){
             fly_weight::get_instance().remove_fly_weight(key.game_zone);
@@ -302,9 +306,10 @@ private:
         auto iterator = collection_bst->infix_it_begin();
         auto comparator = comparer_player_key();
 
+
         if (key1 != nullptr){
 
-            while (comparator(std::get<1>(*iterator), *key1) != 0 && iterator != dynamic_cast<binary_search_tree<player_key, player_value, comparer_player_key>*>(collection)->infix_it_end()){
+            while (comparator(std::get<1>(*iterator), collection_bst->find_for_read_range(*key1)) != 0 && iterator != dynamic_cast<binary_search_tree<player_key, player_value, comparer_player_key>*>(collection)->infix_it_end()){
                 iterator++;
             }
             if (iterator == collection_bst->infix_it_end()){
@@ -313,11 +318,11 @@ private:
         }
         if (f){
             if (key2 != nullptr){
-                while (iterator != collection_bst->infix_it_end() && comparator(std::get<1>(*iterator), *key2) != 0){
+                while (iterator != collection_bst->infix_it_end() && comparator(std::get<1>(*iterator), *key2) < 0){
                     my_queue.emplace(std::get<1>(*iterator), std::get<2>(*iterator));
                     iterator++;
                 }
-                if (iterator != collection_bst->infix_it_end()){
+                if (iterator != collection_bst->infix_it_end() && comparator(std::get<1>(*iterator), *key2) == 0){
                     my_queue.emplace(std::get<1>(*iterator), std::get<2>(*iterator));
                 }
             }else{
@@ -689,7 +694,6 @@ private:
         if(status_in_str.compare("moderator") == 0 || status_in_str.compare("premium") == 0 || status_in_str.compare("simple") == 0 || status_in_str.compare("admin") == 0){
 
         }else{
-            std::cout<<status_in_str<<std::endl;
             throw std::logic_error("Invalid status!");
         }
 
@@ -758,15 +762,19 @@ private:
             throw std::logic_error("Invalid collection");
         }
     }
-
+public:
     void command_parsing(const std::string& command, std::string& key, std::string& value){
         std::string command_str;
         size_t l;
         size_t r;
 
+        std::fstream fin_write;
+        fin_write.open("/home/dina/CLionProjects/NEWcoursework/database/writing.txt", std::ios::app);
+        if(!fin_write.is_open()){
+            throw std::logic_error("Could not open a file for writing!");
+        }
         if(command.find("insert: ") == 0){
             command_str = command.substr(8);
-
             std::string is_pool;
             std::string is_scheme;
             std::string is_collection;
@@ -783,6 +791,10 @@ private:
                 player_key k = std::move(key_parsing(key));
                 player_value v = std::move(value_parsing(value));
                 insert(k, v, is_pool, is_scheme, is_collection);
+
+                fin_write<<"insert: ["<<is_pool<<"]"<<" ["<<is_scheme<<"] "<<"["<<is_collection<<"]"<<std::endl;
+                fin_write<<"key: ["<<k.player_id<<"] ["<<k.game_zone<<"]"<<std::endl;
+                fin_write<<"value: ["<<v.nickname<<"] ["<<v.status<<"] ["<<v.valute<<"] ["<<v.premium_valute<<"] ["<<v.experience<<"] ["<<v.date_of_registration<<"] ["<<v.time_in_game<<"]"<<std::endl;
 
                 std::string message = " ~~Insert finished!\n--key: [id: " + std::to_string(k.player_id) + ", game zone: " + k.game_zone + "] ";
                 _logger->log(message, logger::severity::warning);
@@ -807,6 +819,10 @@ private:
                 player_key k = std::move(key_parsing(key));
                 fly_weight::get_instance().remove_fly_weight(k.game_zone);
                 player_value v = get_value_from_key(k, is_pool, is_scheme, is_collection);
+
+                fin_write<<"read key: ["<<is_pool<<"]"<<" ["<<is_scheme<<"] "<<"["<<is_collection<<"]"<<std::endl;
+                fin_write<<"key: ["<<k.player_id<<"] ["<<k.game_zone<<"]"<<std::endl;
+
                 std::string message = " ~~Reading value from key finished!!\n--key: [id: " + std::to_string(k.player_id) + ", game zone: " + k.game_zone + "] " + value_to_output(v);
                 _logger->log(message, logger::severity::warning);
             }catch(const std::logic_error& ex) {throw ex;}
@@ -827,6 +843,11 @@ private:
                 player_key k = std::move(key_parsing(key));
                 player_value v = std::move(value_parsing(value));
                 update_key(k, v, is_pool, is_scheme, is_collection);
+
+                fin_write<<"update key: ["<<is_pool<<"] "<<"["<<is_scheme<<"] "<<"["<<is_collection<<"]"<<std::endl;
+                fin_write<<"key: ["<<k.player_id<<"] ["<<k.game_zone<<"]"<<std::endl;
+                fin_write<<"value: ["<<v.nickname<<"] ["<<v.status<<"] ["<<v.valute<<"] ["<<v.premium_valute<<"] ["<<v.experience<<"] ["<<v.date_of_registration<<"] ["<<v.time_in_game<<"]"<<std::endl;
+
                 std::string message = "~~Update key finished!\n--key: [id: " + std::to_string(k.player_id) +  ", game zone: " + k.game_zone + "] ";
                 _logger->log(message, logger::severity::warning);
             }catch(const std::logic_error& ex) {throw ex;}
@@ -846,8 +867,13 @@ private:
 
             try{
                 player_key k = std::move(key_parsing(key));
+
                 fly_weight::get_instance().remove_fly_weight(k.game_zone);
                 remove(k, is_pool, is_scheme, is_collection);
+
+                fin_write<<"remove: ["<<is_pool<<"] ["<<is_scheme<<"] ["<<is_collection<<"]"<<std::endl;
+                fin_write<<"key: ["<<k.player_id<<"] ["<<k.game_zone<<"]"<<std::endl;
+
                 std::string message = " ~~Remove finished!\n--key: [id: " + std::to_string(k.player_id) +  ", game zone: " + k.game_zone + "] ";
                 _logger->log(message, logger::severity::warning);
             }catch(const std::logic_error& ex) {throw ex;}
@@ -860,13 +886,12 @@ private:
             //////////////add pool command
         else if(command.find("add pool: ") == 0){
             command_str = command.substr(10);
-
             std::string pool_name;
             type_of_allocator alloc_name;
             size_t size;
             type_of_allocator_detour alloc_mode;
 
-            try{ pool_name = field_pasing(command_str, "pool name"); } catch(const std::logic_error& ex){ throw ex; }
+            try{ pool_name = field_pasing(command_str, "pool name");} catch(const std::logic_error& ex){ throw ex; }
 
             l = command_str.find("{ ");
             if(l != 0) throw std::logic_error("Wrong format of a command!");
@@ -903,31 +928,7 @@ private:
                 if(l != 0) throw std::logic_error("Wrong format of a command!");
             }
 
-//            if(alloc_name == type_of_allocator::sorted_list){
-//                l = command_str.find('[');
-//                if(l != 0) throw std::logic_error("Wrong format of a command!");
-//                r = command_str.find("] ");
-//                if(r == std::string::npos) throw std::logic_error("Wrong format of a command!");
-//                std::string detour_str = command_str.substr(1, r - 1);
-//                if(detour_str.empty()) throw std::logic_error("Invalid type of allocator!");
-//
-//                if(detour_str == "first") alloc_mode = type_of_allocator_detour::first;
-//
-//                else if(detour_str == "best") alloc_mode = type_of_allocator_detour::best;
-//
-//                else if(detour_str == "worst") alloc_mode = type_of_allocator_detour::worst;
-//
-//                else throw std::logic_error("Error: invalid mode");
-//
-//                command_str = command_str.substr(r + 2);
-//                l = command_str.find('}');
-//                if(l != 0) throw std::logic_error("Wrong format of a command!");
-//            }else{
-//                alloc_mode = type_of_allocator_detour::none;
-//                l = command_str.find('}');
-//                if(l != 0) throw std::logic_error("Wrong format of a command!");
-//            }
-
+            std::string alloc_mode_in_str;
             if(alloc_name == type_of_allocator::border_descriptor || alloc_name == type_of_allocator::sorted_list){
                 l = command_str.find('[');
                 if(l != 0) throw std::logic_error("Wrong format of a command!");
@@ -936,11 +937,20 @@ private:
                 std::string detour_str = command_str.substr(1, r - 1);
                 if(detour_str.empty()) throw std::logic_error("Invalid type of allocator!");
 
-                if(detour_str == "first") alloc_mode = type_of_allocator_detour::first;
+                if(detour_str == "first") {
+                    alloc_mode = type_of_allocator_detour::first;
+                    alloc_mode_in_str = detour_str;
+                }
 
-                else if(detour_str == "best") alloc_mode = type_of_allocator_detour::best;
+                else if(detour_str == "best") {
+                    alloc_mode = type_of_allocator_detour::best;
+                    alloc_mode_in_str = detour_str;
+                }
 
-                else if(detour_str == "worst") alloc_mode = type_of_allocator_detour::worst;
+                else if(detour_str == "worst") {
+                    alloc_mode = type_of_allocator_detour::worst;
+                    alloc_mode_in_str = detour_str;
+                }
 
                 else throw std::logic_error("Error: invalid mode");
 
@@ -953,7 +963,10 @@ private:
                 if(l != 0) throw std::logic_error("Wrong format of a command!");
             }
 
-            try{ add_pool(pool_name, alloc_name, size, alloc_mode); } catch(const std::logic_error& ex){ throw ex; }
+            try{ add_pool(pool_name, alloc_name, size, alloc_mode);
+                fin_write<<"add pool: ["<<pool_name<<"] { ["<<alloc_name_str<<"] ["<<std::to_string(size)<<"] ["<<alloc_mode_in_str<<"] }"<<std::endl;
+
+            } catch(const std::logic_error& ex){ throw ex; }
 
             std::string message = "***** Pool " +  pool_name + " was added succesfully!";
             _logger->log(message, logger::severity::warning);
@@ -973,7 +986,10 @@ private:
             pool_name = command_str.substr(1, r - 1);
             if(pool_name.empty()) throw std::logic_error("Invalid pool name!");
 
-            try{ delete_pool(pool_name); } catch(const std::logic_error& ex){ throw ex; }
+            try{
+                delete_pool(pool_name);
+                fin_write<<"delete pool: ["<<pool_name<<"]"<<std::endl;
+            } catch(const std::logic_error& ex){ throw ex; }
 
             std::string message = "***** Pool " + pool_name + " was deleted successfully!";
             _logger->log(message, logger::severity::warning);
@@ -995,7 +1011,9 @@ private:
             scheme_name = command_str.substr(1, r - 1);
             if(scheme_name.empty()) throw std::logic_error("Invalid scheme name!");
 
-            try{ add_scheme(scheme_name, pool_name); } catch(const std::logic_error& ex){ throw ex; }
+            try{ add_scheme(scheme_name, pool_name);
+                fin_write<<"add scheme: ["<<pool_name<<"] ["<<scheme_name<<"]"<<std::endl;
+            } catch(const std::logic_error& ex){ throw ex; }
 
             std::string message = "***** Scheme '" + scheme_name + "was added in " + pool_name + "!";
 
@@ -1017,7 +1035,10 @@ private:
             scheme_name = command_str.substr(1, r - 1);
             if(scheme_name.empty()) throw std::logic_error("Invalid scheme name!");
 
-            try{ delete_scheme(scheme_name, pool_name); } catch(const std::logic_error& ex){ throw ex; }
+            try{
+                delete_scheme(scheme_name, pool_name);
+                fin_write<<"delete scheme: ["<<pool_name<<"] ["<<scheme_name<<"]"<<std::endl;
+            } catch(const std::logic_error& ex){ throw ex; }
 
             std::string message = "***** Scheme " + scheme_name + " was deleted from " + pool_name + ".";
 
@@ -1052,7 +1073,9 @@ private:
 
             else throw std::logic_error("Invalid tree name!");
 
-            try{ add_collection(collection_name, pool_name, scheme_name, tree_name); } catch(const std::logic_error& ex){ throw ex; }
+            try{ add_collection(collection_name, pool_name, scheme_name, tree_name);
+                fin_write<<"add collection: ["<<pool_name<<"] ["<<scheme_name<<"] ["<<collection_name<<"] {"<<tree_name_str<<"}"<<std::endl;
+            } catch(const std::logic_error& ex){ throw ex; }
 
             std::string message = "***** Collection " + collection_name + " was added in pool " + pool_name + " in scheme " + scheme_name + "!";
             _logger->log(message, logger::severity::warning);
@@ -1068,6 +1091,8 @@ private:
             try{
                 coll_sch_pool_parsing(pool_name, scheme_name, collection_name, command_str);
                 delete_collection(collection_name, scheme_name, pool_name);
+                fin_write<<"add collection: ["<<pool_name<<"] ["<<scheme_name<<"] ["<<collection_name<<"]"<<std::endl;
+
             }catch(const std::logic_error& ex) { throw ex; }
 
             std::string message = "***** Collection " + collection_name + "was deleted from pool " + pool_name + " in scheme " + scheme_name + "!";
@@ -1084,8 +1109,8 @@ private:
             }catch(const std::logic_error& er){
                 throw er;
             }
-            player_key* key1_ptr;
-            player_key* key2_ptr;
+            player_key* key1_ptr = nullptr;
+            player_key* key2_ptr = nullptr;
             l = key.find('{');
             if (l != 0){
                 throw std::logic_error("Incorrect input: not enough '[' !");
@@ -1096,17 +1121,7 @@ private:
                 throw std::logic_error("Incorrect input: not enough '[' !");
             }
             key = key.substr(l + 1, r -1);
-            if (!key.empty()){
-                try{
-                    player_key key1 = std::move(key_parsing(key));
-                    fly_weight::get_instance().remove_fly_weight(key1.game_zone);
-                    key1_ptr = &key1;
-                }catch (const std::logic_error& er){
-                    throw er;
-                }
-            }else{
-                key1_ptr = nullptr;
-            }
+
             l = value.find('{');
             if (l != 0){
                 throw std::logic_error("Incorrect input: not enough '[' !");
@@ -1117,24 +1132,121 @@ private:
                 throw std::logic_error("Incorrect input: not enough '[' !");
             }
             value = value.substr(l + 1, r -1);
-            if (!value.empty()){
-                try{
-                    player_key key2 = std::move(key_parsing(value));
+
+            try{
+                if (!value.empty() && !key.empty()){
+                    player_key key2 = key_parsing(value);
                     fly_weight::get_instance().remove_fly_weight(key2.game_zone);
                     key2_ptr = &key2;
-                }catch (const std::logic_error& er){
-                    throw er;
+                    player_key key1 = key_parsing(key);
+                    fly_weight::get_instance().remove_fly_weight(key1.game_zone);
+                    key1_ptr = &key1;
+                    std::queue<std::tuple<player_key, player_value>> result;
+                    result = read_range(key1_ptr, key2_ptr, pool_name, scheme_name, collection_name);
+                    fin_write<<"read range: ["<<pool_name<<"] ["<<scheme_name<<"] ["<<collection_name<<"]"<<std::endl;
+                    fin_write<<"{key: ["<<key1_ptr->player_id<<"] ["<<key1_ptr->game_zone<<"]}"<<std::endl;
+                    fin_write<<"{key: ["<<key2_ptr->player_id<<"] ["<<key2_ptr->game_zone<<"]}"<<std::endl;
+                    std::string message;
+                    if (result.empty()){
+                        message = "Problem: there are no such data!";
+                    }else{
+                        std::cout << "----------Reading range----------" << std::endl;
+                        while (!result.empty()){
+
+                            message += key_and_value_print(std::make_pair(std::get<0>(result.front()), std::get<1>(result.front())));
+
+                            std::cout << message << std::endl;
+                            result.pop();
+                            message = "";
+                        }
+                    }
+                }else if (!key.empty() && value.empty()){
+                    key2_ptr = nullptr;
+                    player_key key1 = key_parsing(key);
+                    fly_weight::get_instance().remove_fly_weight(key1.game_zone);
+                    key1_ptr = &key1;
+                    std::queue<std::tuple<player_key, player_value>> result;
+                    result = read_range(key1_ptr, key2_ptr, pool_name, scheme_name, collection_name);
+//                    fin_write<<"read range: ["<<pool_name<<"] ["<<scheme_name<<"] ["<<collection_name<<"]"<<std::endl;
+//                    fin_write<<"{key: ["<<key1_ptr->player_id<<"] ["<<key1_ptr->game_zone<<"]}"<<std::endl;
+//                    fin_write<<"{key: ["<<key2_ptr->player_id<<"] ["<<key2_ptr->game_zone<<"]}"<<std::endl;
+                    std::string message;
+                    if (result.empty()){
+                        message = "Problem: there are no such data!";
+                    }else{
+                        std::cout << "----------Reading range----------" << std::endl;
+                        while (!result.empty()){
+
+                            message += key_and_value_print(std::make_pair(std::get<0>(result.front()), std::get<1>(result.front())));
+
+                            std::cout << message << std::endl;
+                            result.pop();
+                            message = "";
+                        }
+                    }
+                }else if (key.empty() && !value.empty()){
+                    player_key key2 = key_parsing(value);
+                    fly_weight::get_instance().remove_fly_weight(key2.game_zone);
+                    key2_ptr = &key2;
+                    key1_ptr = nullptr;
+                    std::queue<std::tuple<player_key, player_value>> result;
+                    result = read_range(key1_ptr, key2_ptr, pool_name, scheme_name, collection_name);
+//                    fin_write<<"read range: ["<<pool_name<<"] ["<<scheme_name<<"] ["<<collection_name<<"]"<<std::endl;
+//                    fin_write<<"{key: ["<<key1_ptr->player_id<<"] ["<<key1_ptr->game_zone<<"]}"<<std::endl;
+//                    fin_write<<"{key: ["<<key2_ptr->player_id<<"] ["<<key2_ptr->game_zone<<"]}"<<std::endl;
+                    std::string message;
+                    if (result.empty()){
+                        message = "Problem: there are no such data!";
+                    }else{
+                        std::cout << "----------Reading range----------" << std::endl;
+                        while (!result.empty()){
+
+                            message += key_and_value_print(std::make_pair(std::get<0>(result.front()), std::get<1>(result.front())));
+
+                            std::cout << message << std::endl;
+                            result.pop();
+                            message = "";
+                        }
+                    }
+                }else{
+                    key1_ptr = nullptr;
+                    key2_ptr = nullptr;
+                    std::queue<std::tuple<player_key, player_value>> result;
+                    result = read_range(key1_ptr, key2_ptr, pool_name, scheme_name, collection_name);
+//                    fin_write<<"read range: ["<<pool_name<<"] ["<<scheme_name<<"] ["<<collection_name<<"]"<<std::endl;
+//                    fin_write<<"{key: ["<<key1_ptr->player_id<<"] ["<<key1_ptr->game_zone<<"]}"<<std::endl;
+//                    fin_write<<"{key: ["<<key2_ptr->player_id<<"] ["<<key2_ptr->game_zone<<"]}"<<std::endl;
+                    std::string message;
+                    if (result.empty()){
+                        message = "Problem: there are no such data!";
+                    }else{
+                        std::cout << "----------Reading range----------" << std::endl;
+                        while (!result.empty()){
+
+                            message += key_and_value_print(std::make_pair(std::get<0>(result.front()), std::get<1>(result.front())));
+
+                            std::cout << message << std::endl;
+                            result.pop();
+                            message = "";
+                        }
+                    }
                 }
-            }else{
-                key2_ptr = nullptr;
-            }
-            std::queue<std::tuple<player_key, player_value>> result;
-            try{
-                result = read_range(key1_ptr, key2_ptr, pool_name, scheme_name, collection_name);
+
             }catch (const std::logic_error& er){
                 throw er;
             }
-            std::string message;
+
+            /*std::queue<std::tuple<player_key, player_value>> result;
+            try{
+                result = read_range(key1_ptr, key2_ptr, pool_name, scheme_name, collection_name);
+                fin_write<<"read range: ["<<pool_name<<"] ["<<scheme_name<<"] ["<<collection_name<<"]"<<std::endl;
+                fin_write<<"{key: ["<<key1_ptr->player_id<<"] ["<<key1_ptr->game_zone<<"]}"<<std::endl;
+                fin_write<<"{key: ["<<key2_ptr->player_id<<"] ["<<key2_ptr->game_zone<<"]}"<<std::endl;
+
+            }catch (const std::logic_error& er){
+                throw er;
+            }*/
+           /* std::string message;
             if (result.empty()){
                 message = "Problem: there are no such data!";
             }else{
@@ -1147,16 +1259,45 @@ private:
                     result.pop();
                     message = "";
                 }
-            }
+            }*/
         }
-        else if(command_str.find("reset database:") == 0){
+        else if(command.find("reset database:") == 0){
             delete_database();
+            fin_write<<"reset database:"<<std::endl;
             _logger->log("~~~~~~~~~~~Database was deleted!~~~~~~~~~~~", logger::severity::warning);
 
         }
-        else throw std::logic_error("Invalid format of command!");
-    }
+        else if(command.find("save my commands:") == 0){
+            _logger->log("Saving database....\n", logger::severity::warning);
+            command_str = command.substr(18);
+            std::ofstream file_for_client;
+            file_for_client.open(command_str, std::ios::app);
+            fin_write.close();
+            std::fstream fin_write;
+            fin_write.open("/home/dina/CLionProjects/NEWcoursework/database/writing.txt");
+            std::string s;
+            std::getline(fin_write, s);
+            while(!fin_write.eof()){
+                file_for_client<<s<<std::endl;
+                std::getline(fin_write, s);
+            }
+            file_for_client.close();
+            fin_write.close();
+            fin_write.open("/home/dina/CLionProjects/NEWcoursework/database/writing.txt");
 
+        }
+        else if(command.find("restore database:") == 0){
+            delete_database();
+            _logger->log("Restoring database....\n", logger::severity::warning);
+            std::cout << key << std::endl;
+            run_file_commands(key);
+
+
+        }
+        else throw std::logic_error("Invalid format of command!");
+        fin_write.close();
+    }
+private:
     static std::string name_of_file(const std::string& path){
         size_t tmp = path.find('\\');
         size_t tmp2;
@@ -1200,7 +1341,7 @@ public:
                     fin.close();
                     throw std::logic_error("Wrong format of a command!(no key)");
                 }
-            }else if(line.find("add pool: ") == 0 || line.find("delete pool: ") == 0 || line.find("add scheme: ") == 0 || line.find("delete scheme: ") == 0 || line.find("add collection: ") == 0 || line.find("delete collection: ") == 0 || line.find("reset database:") == 0){
+            }else if(line.find("add pool: ") == 0 || line.find("delete pool: ") == 0 || line.find("add scheme: ") == 0 || line.find("delete scheme: ") == 0 || line.find("add collection: ") == 0 || line.find("delete collection: ") == 0 || line.find("reset database:") == 0 || line.find("save my commands:") == 0){
                 try{ command_parsing(line, line2, line3); } catch(const std::logic_error& ex){
                     fin.close();
                     throw ex;
@@ -1229,8 +1370,8 @@ public:
         std::string action;
         std::string input;
 
-        while(action != "4"){
-            _logger->log("\n------------------------------------------\n\n ~~~~~Choose an action ~~~~~\n\n1) Run commands in a file\n2) Enter a command manually\n3) Reset database\n4) Exit\n\n~~~~~ Enter:", logger::severity::warning);
+        while(action != "5"){
+            _logger->log("\n------------------------------------------\n\n ~~~~~Choose an action ~~~~~\n\n1) Run commands in a file\n2) Enter a command manually\n3) Reset database\n4) Restore database\n5) Exit\n\n~~~~~ Enter:", logger::severity::warning);
             std::cin.clear();
             getline(std::cin, action);
 
@@ -1245,7 +1386,7 @@ public:
                 }
                 try{
                     run_file_commands(input);
-                    _logger->log("\n------------------------------------------\n\n~~~~~ Parsing commands finished successfully! ~~~~~n\n1) Continue\n2) Exit\n\n~~~~~ Input:", logger::severity::warning);
+                    _logger->log("\n------------------------------------------\n\n~~~~~ Parsing commands finished successfully! ~~~~~\n1) Continue\n2) Exit\n\n~~~~~ Input:", logger::severity::warning);
                     std::string tmp_action;
                     std::cin.clear();
                     getline(std::cin, tmp_action);
@@ -1289,11 +1430,11 @@ public:
                 std::string key_line;
                 std::string value_line;
 
-                _logger->log("\n------------------------------------------\n\n~~~~~ Choose a command ~~~~~\n\n1) insert\n2) read key\n3) read range\n4) update key\n5) remove\n6) add pool\n7) delete pool\n8) add scheme\n9) delete scheme\n10) add collection\n11) delete collection\n\n~~~> Command:", logger::severity::warning);
+                _logger->log("\n------------------------------------------\n\n~~~~~ Choose a command ~~~~~\n\n1) insert\n2) read key\n3) read range\n4) update key\n5) remove\n6) add pool\n7) delete pool\n8) add scheme\n9) delete scheme\n10) add collection\n11) delete collection\n12) save commands\n~~~> Command:", logger::severity::warning);
                 std::cin.clear();
                 getline(std::cin, command_action);
 
-                if(command_action == "1" || command_action == "2" || command_action == "3" || command_action == "4" || command_action == "5" || command_action == "6" || command_action == "7" || command_action == "8" || command_action == "9" || command_action == "10" || command_action == "11"){
+                if(command_action == "1" || command_action == "2" || command_action == "3" || command_action == "4" || command_action == "5" || command_action == "6" || command_action == "7" || command_action == "8" || command_action == "9" || command_action == "10" || command_action == "11" || command_action == "12"){
                     if(command_action == "1"){
                         _logger->log("\n------------------------------------------\n\n(?) Format: insert format:\ninsert: [pool_name] [scheme_name] [collection_name]\nkey: [id] [game_zone]\nvalue: [nickname] [status] [valute] [premium valute] [experience] [date of registration] [time in game (min)]\n\n~~~~~ Enter a command line ~~~~~\n\n~~~> Command line:", logger::severity::warning);
                     }else if(command_action == "2"){
@@ -1314,8 +1455,10 @@ public:
                         _logger->log("\n------------------------------------------\n\n(?) Format: delete scheme format:\ndelete scheme: [pool_name] [scheme_name]\n\n~~~~~ Enter a command line ~~~~~\n\n~~~> Command line:", logger::severity::warning);
                     }else if(command_action == "10"){
                         _logger->log("\n------------------------------------------\n\n(?) Format: add collection format:\nadd collection: [pool_name] [scheme_name] [collection_name] {tree_name}\n\n~~~~~ Enter a command line ~~~~~\n\n~~~> Command line:", logger::severity::warning);
-                    }else{
+                    }else if(command_action == "11"){
                         _logger->log("\n------------------------------------------\n\n(?) Format: delete collection format:\ndelete collection: [pool_name] [scheme_name] [collection_name]\n\n~~~~~ Enter a command line ~~~~~\n\n~~~> Command line:", logger::severity::warning);
+                    }else if(command_action == "12"){
+                        _logger->log("\n------------------------------------------\n\n(?) Format: save my commands:\nsave my commands: <file_path_to_save>\n\n~~~~~ Enter a command line ~~~~~\n\n~~~> Command line:", logger::severity::warning);
                     }
                     std::cin.clear();
                     getline(std::cin, command_line);
@@ -1362,6 +1505,54 @@ public:
                 continue;
 
             }else if(action == "4"){
+                delete_database();
+                _logger->log("\n------------------------------------------\n\n~~~~~ Enter a file's path ~~~~~\n\n~~~~~ Path:", logger::severity::warning);
+                std::cin.clear();
+                getline(std::cin, input);
+                if(input.empty()){
+                    _logger->log("\n\nError: empty path, returning...\n", logger::severity::warning);
+                    continue;
+                }
+                try{
+                    run_file_commands(input);
+                    _logger->log("\n------------------------------------------\n\n~~~~~ Parsing commands finished successfully! ~~~~~\n1) Continue\n2) Exit\n\n~~~~~ Input:", logger::severity::warning);
+                    std::string tmp_action;
+                    std::cin.clear();
+                    getline(std::cin, tmp_action);
+                    if(tmp_action == "1"){
+                        continue;
+                    }else if(tmp_action == "2"){
+                        _logger->log("\n------------------------------------------\n\n~~~~~ Exiting... ~~~~~\n", logger::severity::warning);
+                        break;
+                    }else{
+                        _logger->log("\n\nError: undefined action, choosing 'continue' for safety...\n", logger::severity::warning);
+                        continue;
+                    }
+                }catch(const std::logic_error& ex){
+                    std::string tmp_action;
+                    std::string message = "\n\n";
+                    message += ex.what();
+                    message += "\n";
+                    _logger->log(message, logger::severity::warning);
+                    _logger->log("\n------------------------------------------\n\n~~~~~ Parsing commands failed! ~~~~~\n\n1) Continue\n2) Reset and continue\n3) Exit\n\n~~~> Input:", logger::severity::warning);
+                    std::cin.clear();
+                    getline(std::cin, tmp_action);
+                    if(tmp_action == "1") {
+                        continue;
+                    }else if(tmp_action == "2"){
+                        _logger->log("\n------------------------------------------\n\n~~~~~ Continuing, Resetting... ~~~~~\n", logger::severity::warning);
+                        delete_database();
+                        continue;
+                    }else if(tmp_action == "3"){
+                        _logger->log("\n------------------------------------------\n\n~~~~~ Exiting... ~~~~~\n", logger::severity::warning);
+                        break;
+                    }else{
+                        _logger->log("\nError: undefined action, choosing 'continue' for safety...\n", logger::severity::warning);
+                        continue;
+                    }
+                }
+
+            }else if(action == "5"){
 
                 _logger->log("\n------------------------------------------\n\n~~~~~ Exiting... ~~~~~\n", logger::severity::warning);
                 break;
